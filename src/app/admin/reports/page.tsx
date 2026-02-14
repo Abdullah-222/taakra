@@ -1,8 +1,40 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { theme } from '@/lib/theme'
+import { toast } from '@/components/ui/ToasterProvider'
+
+const REPORT_CARDS = [
+  {
+    id: 'users' as const,
+    title: 'Users',
+    description: 'Export all users: email, name, role, snow points, and join date.',
+    icon: '👥',
+  },
+  {
+    id: 'competitions' as const,
+    title: 'Competitions',
+    description: 'All competitions with category, status, deadline, prize, and registration count.',
+    icon: '❄️',
+  },
+  {
+    id: 'registrations' as const,
+    title: 'Registrations & payments',
+    description: 'Detailed registration and payment status for every competition entry.',
+    icon: '📋',
+  },
+  {
+    id: 'activity' as const,
+    title: 'Activity log',
+    description: 'Recent platform activity: logins, registrations, and admin actions.',
+    icon: '📈',
+  },
+] as const
+
+type ReportType = (typeof REPORT_CARDS)[number]['id']
 
 export default function ReportsPage() {
+  const [downloading, setDownloading] = useState<ReportType | null>(null)
   const [logged, setLogged] = useState(false)
 
   useEffect(() => {
@@ -14,134 +46,122 @@ export default function ReportsPage() {
           headers: { 'Content-Type': 'application/json' },
         })
         setLogged(true)
-      } catch (error) {
-        console.error('Failed to log report view:', error)
+      } catch {
+        // ignore
       }
     }
     logReportView()
   }, [logged])
 
+  async function handleDownload(type: ReportType) {
+    setDownloading(type)
+    try {
+      const res = await fetch(`/api/admin/reports/download?type=${type}`, { credentials: 'include' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to generate report')
+      }
+      const blob = await res.blob()
+      const disposition = res.headers.get('Content-Disposition')
+      const match = disposition?.match(/filename="(.+)"/)
+      const filename = match?.[1] ?? `taakra-${type}-${new Date().toISOString().slice(0, 10)}.csv`
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success(`Report downloaded: ${filename}`)
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to download report')
+    } finally {
+      setDownloading(null)
+    }
+  }
+
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-stone-900 dark:text-white mb-1">
+    <div className="p-6 sm:p-8 max-w-5xl">
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1" style={{ color: theme.colors.textPrimary }}>
           Reports
         </h1>
-        <p className="text-stone-600 dark:text-gray-400">
-          Generate and export detailed reports about your platform.
+        <p className="text-sm sm:text-base" style={{ color: theme.colors.textMuted }}>
+          Download detailed CSV reports. Each report includes current data as of now.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-gray-800 border border-stone-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
-          <div className="text-3xl mb-3">📊</div>
-          <h3 className="text-lg font-semibold text-stone-900 dark:text-white mb-2">
-            Property Reports
-          </h3>
-          <p className="text-sm text-stone-600 dark:text-gray-400 mb-4">
-            Generate comprehensive reports on all property listings, including
-            creation dates, views, and performance metrics.
-          </p>
-          <button
-            type="button"
-            className="w-full px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-sm font-semibold transition-colors"
-          >
-            Generate Report
-          </button>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 border border-stone-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
-          <div className="text-3xl mb-3">👥</div>
-          <h3 className="text-lg font-semibold text-stone-900 dark:text-white mb-2">
-            User Reports
-          </h3>
-          <p className="text-sm text-stone-600 dark:text-gray-400 mb-4">
-            Export user data, registration trends, activity logs, and user
-            engagement statistics.
-          </p>
-          <button
-            type="button"
-            className="w-full px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-sm font-semibold transition-colors"
-          >
-            Generate Report
-          </button>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 border border-stone-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
-          <div className="text-3xl mb-3">📈</div>
-          <h3 className="text-lg font-semibold text-stone-900 dark:text-white mb-2">
-            Analytics Reports
-          </h3>
-          <p className="text-sm text-stone-600 dark:text-gray-400 mb-4">
-            Create detailed analytics reports with charts, graphs, and KPI
-            summaries for executive review.
-          </p>
-          <button
-            type="button"
-            className="w-full px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-sm font-semibold transition-colors"
-          >
-            Generate Report
-          </button>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 border border-stone-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
-          <div className="text-3xl mb-3">🔍</div>
-          <h3 className="text-lg font-semibold text-stone-900 dark:text-white mb-2">
-            Activity Logs
-          </h3>
-          <p className="text-sm text-stone-600 dark:text-gray-400 mb-4">
-            Export complete activity logs with filters for date ranges, action
-            types, and user-specific activities.
-          </p>
-          <button
-            type="button"
-            className="w-full px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-sm font-semibold transition-colors"
-          >
-            Export Logs
-          </button>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 border border-stone-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
-          <div className="text-3xl mb-3">💼</div>
-          <h3 className="text-lg font-semibold text-stone-900 dark:text-white mb-2">
-            Performance Reports
-          </h3>
-          <p className="text-sm text-stone-600 dark:text-gray-400 mb-4">
-            Analyze platform performance metrics, response times, and system
-            health indicators.
-          </p>
-          <button
-            type="button"
-            className="w-full px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-sm font-semibold transition-colors"
-          >
-            Generate Report
-          </button>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 border border-stone-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
-          <div className="text-3xl mb-3">📅</div>
-          <h3 className="text-lg font-semibold text-stone-900 dark:text-white mb-2">
-            Custom Reports
-          </h3>
-          <p className="text-sm text-stone-600 dark:text-gray-400 mb-4">
-            Create custom reports with your own filters, date ranges, and data
-            selections.
-          </p>
-          <button
-            type="button"
-            className="w-full px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-sm font-semibold transition-colors"
-          >
-            Create Custom Report
-          </button>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        {REPORT_CARDS.map((card) => {
+          const isDownloading = downloading === card.id
+          return (
+            <div
+              key={card.id}
+              className="rounded-2xl overflow-hidden transition-all hover:shadow-lg"
+              style={{
+                background: theme.glass.background,
+                border: theme.glass.border,
+                boxShadow: theme.glass.shadow,
+              }}
+            >
+              <div className="p-5 sm:p-6">
+                <div className="flex items-start gap-4">
+                  <span
+                    className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0 text-2xl"
+                    style={{
+                      background: 'color-mix(in srgb, var(--color-glacier-500) 14%, transparent)',
+                      border: theme.glass.border,
+                    }}
+                  >
+                    {card.icon}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-lg font-bold mb-1" style={{ color: theme.colors.textPrimary }}>
+                      {card.title}
+                    </h2>
+                    <p className="text-sm mb-4" style={{ color: theme.colors.textMuted }}>
+                      {card.description}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleDownload(card.id)}
+                      disabled={!!downloading}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:pointer-events-none"
+                      style={{
+                        background: theme.buttons.primary.background,
+                        color: theme.buttons.primary.color,
+                        boxShadow: theme.buttons.primary.shadow,
+                      }}
+                    >
+                      {isDownloading ? (
+                        <>
+                          <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                          Generating…
+                        </>
+                      ) : (
+                        'Download report'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
 
-      <div className="mt-8 bg-white dark:bg-gray-800 border border-stone-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-stone-900 dark:text-white mb-4">
-          Report History
+      <div
+        className="mt-8 rounded-2xl p-5 sm:p-6"
+        style={{
+          background: theme.glass.background,
+          border: theme.glass.border,
+          boxShadow: theme.glass.shadow,
+        }}
+      >
+        <h2 className="text-lg font-bold mb-2" style={{ color: theme.colors.textPrimary }}>
+          About these reports
         </h2>
-        <p className="text-sm text-stone-500 dark:text-gray-400">
-          Your generated reports will appear here. This feature is coming soon.
+        <p className="text-sm" style={{ color: theme.colors.textMuted }}>
+          Reports are generated as CSV files you can open in Excel or Google Sheets. Activity log includes the most recent 5,000 entries. Refresh the page and download again to get the latest data.
         </p>
       </div>
     </div>

@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { theme } from '@/lib/theme'
+import { toast } from '@/components/ui/ToasterProvider'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -43,6 +44,8 @@ function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailMo
   const [internalNotes, setInternalNotes] = useState(registration?.internalNotes || '')
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const rejectionReasonRef = useRef<HTMLTextAreaElement>(null)
+  const errorBannerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (registration) {
@@ -55,7 +58,9 @@ function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailMo
 
   const handleVerify = async (action: 'approve' | 'reject') => {
     if (action === 'reject' && !rejectionReason.trim()) {
-      setError('Rejection reason is required')
+      setError('Please enter a reason for rejection before setting status to Rejected.')
+      errorBannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      rejectionReasonRef.current?.focus()
       return
     }
 
@@ -124,14 +129,17 @@ function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailMo
         <div className="p-6 space-y-6">
           {error && (
             <div
-              className="p-3 rounded-lg text-sm"
+              ref={errorBannerRef}
+              role="alert"
+              className="p-4 rounded-xl text-sm font-medium flex items-start gap-3"
               style={{
-                background: `${theme.colors.danger}20`,
+                background: `${theme.colors.danger}18`,
                 color: theme.colors.danger,
                 border: `1px solid ${theme.colors.danger}`,
               }}
             >
-              {error}
+              <span className="shrink-0" aria-hidden>⚠️</span>
+              <span>{error}</span>
             </div>
           )}
 
@@ -318,6 +326,16 @@ function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailMo
             )}
           </div>
 
+          {/* Form section: Update status */}
+          <div className="pt-2 border-t" style={{ borderColor: 'var(--glass-border)' }}>
+            <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>
+              Update status
+            </h3>
+            <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
+              Approve or reject this payment. If you reject, enter a reason (the participant will see it in the email).
+            </p>
+          </div>
+
           {/* Internal Notes */}
           <div>
             <label
@@ -325,7 +343,7 @@ function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailMo
               className="block mb-2 text-sm font-medium"
               style={{ color: 'var(--color-text-primary)' }}
             >
-              Internal Notes (Admin Only)
+              Internal notes (admin only)
             </label>
             <textarea
               id="internalNotes"
@@ -351,104 +369,114 @@ function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailMo
             />
           </div>
 
-          {/* Rejection Reason (if rejecting) */}
-          {registration.paymentStatus === 'pending' && (
-            <div>
-              <label
-                htmlFor="rejectionReason"
-                className="block mb-2 text-sm font-medium"
-                style={{ color: 'var(--color-text-primary)' }}
-              >
-                Rejection Reason (Required for rejection)
-              </label>
-              <textarea
-                id="rejectionReason"
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Enter reason for rejection (will be shown to user)..."
-                rows={3}
-                className="w-full px-4 py-2.5 text-sm transition-all duration-300 focus:outline-none resize-none"
-                style={{
-                  background: 'var(--input-bg)',
-                  border: 'var(--input-border)',
-                  borderRadius: theme.inputs.radius,
-                  color: 'var(--input-text)',
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.boxShadow = theme.inputs.focusRing
-                  e.currentTarget.style.border = theme.inputs.focusBorder
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.border = 'var(--input-border)'
-                }}
-              />
-            </div>
-          )}
+          {/* Rejection reason: required when rejecting */}
+          <div>
+            <label
+              htmlFor="rejectionReason"
+              className="block mb-2 text-sm font-semibold"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              Rejection reason <span className="font-normal text-red-500 dark:text-red-400">(required if you click Reject)</span>
+            </label>
+            <textarea
+              ref={rejectionReasonRef}
+              id="rejectionReason"
+              value={rejectionReason}
+              onChange={(e) => {
+                setRejectionReason(e.target.value)
+                if (error) setError(null)
+              }}
+              placeholder="e.g. Payment slip unclear, wrong amount..."
+              rows={2}
+              className="w-full px-4 py-2.5 text-sm transition-all focus:outline-none resize-none"
+              style={{
+                background: 'var(--input-bg)',
+                border: 'var(--input-border)',
+                borderRadius: theme.inputs.radius,
+                color: 'var(--input-text)',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.boxShadow = theme.inputs.focusRing
+                e.currentTarget.style.border = theme.inputs.focusBorder
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.boxShadow = 'none'
+                e.currentTarget.style.border = 'var(--input-border)'
+              }}
+              aria-invalid={!!error}
+              aria-describedby={error && error.includes('enter a reason') ? 'rejection-error' : undefined}
+            />
+            {error && error.includes('enter a reason') && (
+              <p id="rejection-error" className="mt-2 text-sm font-medium" style={{ color: theme.colors.danger }}>
+                Please enter a reason for rejection before setting status to Rejected.
+              </p>
+            )}
+          </div>
 
-          {/* Current Status (always show when not pending) */}
+          {/* Current status pill */}
           {registration.paymentStatus !== 'pending' && (
             <div
-              className="p-4 rounded-lg mb-4"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
               style={{
                 background:
                   registration.paymentStatus === 'approved'
-                    ? `${theme.colors.success}20`
-                    : `${theme.colors.danger}20`,
-                border: `1px solid ${
-                  registration.paymentStatus === 'approved' ? theme.colors.success : theme.colors.danger
-                }`,
+                    ? `${theme.colors.success}22`
+                    : `${theme.colors.danger}22`,
+                color: registration.paymentStatus === 'approved' ? theme.colors.success : theme.colors.danger,
+                border: `1px solid ${registration.paymentStatus === 'approved' ? theme.colors.success : theme.colors.danger}`,
               }}
             >
-              <p
-                className="text-sm font-medium mb-2"
-                style={{
-                  color:
-                    registration.paymentStatus === 'approved' ? theme.colors.success : theme.colors.danger,
-                }}
-              >
-                Current: {registration.paymentStatus === 'approved' ? 'Verified' : 'Rejected'}
-              </p>
+              {registration.paymentStatus === 'approved' ? '✓ Verified' : '✗ Rejected'}
               {registration.rejectionReason && (
-                <p
-                  className="text-sm"
-                  style={{ color: 'var(--color-text-secondary)' }}
-                >
-                  <strong>Reason:</strong> {registration.rejectionReason}
-                </p>
+                <span className="opacity-90 max-w-[200px] truncate" title={registration.rejectionReason}>
+                  {' · '}{registration.rejectionReason}
+                </span>
               )}
             </div>
           )}
 
-          {/* Action Buttons - always allow updating status; email sent on every change */}
-          <div className="flex gap-3 pt-4 border-t" style={{ borderColor: 'var(--glass-border)' }}>
+          {/* Action buttons */}
+          <div
+            className="pt-6 mt-2 border-t flex flex-col sm:flex-row gap-3"
+            style={{ borderColor: 'var(--glass-border)' }}
+          >
             <button
+              type="button"
               onClick={() => handleVerify('approve')}
               disabled={isProcessing}
-              className="flex-1 px-6 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 min-w-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:pointer-events-none"
               style={{
                 background: theme.colors.success,
-                color: '#ffffff',
-                borderRadius: theme.buttons.primary.radius,
+                color: '#fff',
+                boxShadow: theme.buttons.primary.shadow,
               }}
             >
-              {isProcessing ? 'Processing...' : '✓ Set to Approved'}
+              {isProcessing ? (
+                <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                '✓ Approve payment'
+              )}
             </button>
             <button
+              type="button"
               onClick={() => handleVerify('reject')}
               disabled={isProcessing}
-              className="flex-1 px-6 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 min-w-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:pointer-events-none border-2"
               style={{
-                background: theme.colors.danger,
-                color: '#ffffff',
-                borderRadius: theme.buttons.primary.radius,
+                background: 'transparent',
+                color: theme.colors.danger,
+                borderColor: theme.colors.danger,
               }}
             >
-              {isProcessing ? 'Processing...' : '✗ Set to Rejected'}
+              {isProcessing ? (
+                <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                'Reject payment'
+              )}
             </button>
           </div>
           <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
-            Changing status will update the record and send an email to the participant.
+            Status change will be saved and the participant will receive an email.
           </p>
         </div>
       </div>
@@ -513,9 +541,21 @@ export default function AdminPaymentsPage() {
         }),
       })
 
+      const data = await response.json().catch(() => ({}))
       if (!response.ok) {
-        const data = await response.json()
         throw new Error(data.error || 'Failed to verify payment')
+      }
+
+      if (action === 'approve') {
+        if (data.emailSent) {
+          toast.success('Payment verified and notification email sent to participant.')
+        } else if (data.emailError) {
+          toast.warning(`Payment verified, but the notification email could not be sent. ${data.emailError}`)
+        } else {
+          toast.success('Payment verified successfully.')
+        }
+      } else {
+        toast.success('Payment rejected.')
       }
 
       // Refresh registrations

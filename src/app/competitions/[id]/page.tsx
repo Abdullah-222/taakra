@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { theme } from '@/lib/theme'
 import { Snowfall } from '@/components/ui/Snowfall'
 import { CompetitionRegistrationForm } from './CompetitionRegistrationForm'
+import { CompetitionChat } from './CompetitionChat'
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -288,7 +289,7 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            {/* Sidebar - Registration Form */}
+            {/* Sidebar - Registration Form + Live Chat */}
             <aside className="space-y-6">
               <CompetitionRegistrationForm
                 competitionId={competition.id}
@@ -297,6 +298,12 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
                 isExpired={isExpired}
                 userRegistration={userRegistration}
                 currentUser={currentUser}
+                registrationFee={Number(process.env.NEXT_PUBLIC_STRIPE_REGISTRATION_FEE) || 0}
+              />
+              <CompetitionChat
+                competitionId={competition.id}
+                competitionTitle={competition.title}
+                currentUser={currentUser ? { id: currentUser.id, email: currentUser.email, name: currentUser.name } : null}
               />
             </aside>
           </div>

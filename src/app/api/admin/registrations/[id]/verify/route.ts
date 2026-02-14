@@ -5,8 +5,9 @@ import { getCurrentUser } from '@/lib/auth'
 import { notifyUser } from '@/lib/activity'
 import { syncRegistrationToCalendar } from '@/lib/calendar/googleCalendar.service'
 
-const resend = new Resend(process.env.RESEND_SECRET_KEY)
-const fromEmail = process.env.RESEND_FROM_EMAIL || 'EstatePro <onboarding@resend.dev>'
+const resendApiKey = process.env.RESEND_SECRET_KEY
+const resend = resendApiKey ? new Resend(resendApiKey) : null
+const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@zalnex.me'
 
 function escapeHtml(s: string): string {
   return s
@@ -153,51 +154,76 @@ export async function PATCH(
 
     const emailHtml = isApproved
       ? `
-        <div style="font-family: system-ui, sans-serif; max-width: 560px; margin: 0 auto;">
-          <h2 style="color: #0f766e;">Payment approved</h2>
-          <p>Hi ${participantName},</p>
-          <p>Your payment for <strong>${compTitle}</strong> has been <strong>verified and approved</strong> by our team.</p>
-          <div style="background: #f0fdfa; border-left: 4px solid #0d9488; padding: 12px 16px; margin: 16px 0;">
-            <p style="margin: 0;"><strong>Competition:</strong> ${compTitle}</p>
-            <p style="margin: 8px 0 0 0;"><strong>Date &amp; time:</strong> ${formattedDate}</p>
-            ${compCategory ? `<p style="margin: 8px 0 0 0;"><strong>Category:</strong> ${compCategory}</p>` : ''}
+        <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 560px; margin: 0 auto; background: #f6f9fc; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);">
+          <div style="background: linear-gradient(135deg, #007aff 0%, #0062cc 100%); padding: 24px 32px; text-align: center;">
+            <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 700;">❄️ Taakra · Payment approved</h1>
           </div>
-          <p>You're all set. We'll see you there.</p>
-          <p>— EstatePro Team</p>
+          <div style="padding: 28px 32px;">
+            <p style="margin: 0 0 16px; color: #1e293b; font-size: 16px;">Hi ${participantName},</p>
+            <p style="margin: 0 0 20px; color: #475569; font-size: 15px; line-height: 1.5;">Your payment for <strong>${compTitle}</strong> has been <strong>verified and approved</strong> by our team.</p>
+            <div style="background: rgba(0, 122, 255, 0.08); border: 1px solid rgba(0, 122, 255, 0.2); border-radius: 16px; padding: 16px 20px; margin: 0 0 20px;">
+              <p style="margin: 0 0 6px;"><strong style="color: #1e293b;">Competition:</strong> ${compTitle}</p>
+              <p style="margin: 0 0 6px;"><strong style="color: #1e293b;">Date &amp; time:</strong> ${formattedDate}</p>
+              ${compCategory ? `<p style="margin: 0;"><strong style="color: #1e293b;">Category:</strong> ${compCategory}</p>` : ''}
+            </div>
+            <p style="margin: 0 0 20px; color: #475569; font-size: 15px;">You're all set. We'll see you there.</p>
+            <p style="margin: 0; color: #94a3b8; font-size: 13px;">— Taakra Team</p>
+          </div>
         </div>
       `
       : `
-        <div style="font-family: system-ui, sans-serif; max-width: 560px; margin: 0 auto;">
-          <h2 style="color: #b91c1c;">Registration / payment not approved</h2>
-          <p>Hi ${participantName},</p>
-          <p>Your registration or payment for <strong>${compTitle}</strong> could not be approved.</p>
-          <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 12px 16px; margin: 16px 0;">
-            <p style="margin: 0;"><strong>Competition:</strong> ${compTitle}</p>
-            <p style="margin: 8px 0 0 0;"><strong>Date &amp; time:</strong> ${formattedDate}</p>
-            ${compCategory ? `<p style="margin: 8px 0 0 0;"><strong>Category:</strong> ${compCategory}</p>` : ''}
-            <p style="margin: 12px 0 0 0;"><strong>Reason:</strong> ${reasonEscaped}</p>
+        <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 560px; margin: 0 auto; background: #f6f9fc; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);">
+          <div style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); padding: 24px 32px; text-align: center;">
+            <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 700;">❄️ Taakra · Registration update</h1>
           </div>
-          <p>If you have questions, please reply to this email or contact support.</p>
-          <p>— EstatePro Team</p>
+          <div style="padding: 28px 32px;">
+            <p style="margin: 0 0 16px; color: #1e293b; font-size: 16px;">Hi ${participantName},</p>
+            <p style="margin: 0 0 20px; color: #475569; font-size: 15px; line-height: 1.5;">Your registration or payment for <strong>${compTitle}</strong> could not be approved.</p>
+            <div style="background: rgba(185, 28, 28, 0.08); border: 1px solid rgba(185, 28, 28, 0.25); border-radius: 16px; padding: 16px 20px; margin: 0 0 20px;">
+              <p style="margin: 0 0 6px;"><strong style="color: #1e293b;">Competition:</strong> ${compTitle}</p>
+              <p style="margin: 0 0 6px;"><strong style="color: #1e293b;">Date &amp; time:</strong> ${formattedDate}</p>
+              ${compCategory ? `<p style="margin: 0 0 8px;"><strong style="color: #1e293b;">Category:</strong> ${compCategory}</p>` : ''}
+              <p style="margin: 0;"><strong style="color: #1e293b;">Reason:</strong> ${reasonEscaped}</p>
+            </div>
+            <p style="margin: 0 0 20px; color: #475569; font-size: 14px;">If you have questions, please reply to this email or contact support.</p>
+            <p style="margin: 0; color: #94a3b8; font-size: 13px;">— Taakra Team</p>
+          </div>
         </div>
       `
 
-    if (registration.user.email) {
-      const { error: emailError } = await resend.emails.send({
-        from: fromEmail,
-        to: registration.user.email,
-        subject: emailSubject,
-        html: emailHtml,
-      })
-      if (emailError) {
-        console.error('Resend email failed (registration status):', emailError)
-        // Don't fail the request; in-app notification already sent
+    let emailSent = false
+    let emailError: string | undefined
+    const toEmail = registration.user?.email
+    if (toEmail) {
+      if (!resend) {
+        emailError = 'RESEND_SECRET_KEY is not set. Set it in .env to send notification emails.'
+        console.warn('Resend skipped (no API key):', emailError)
+      } else {
+        console.log('[registration-verify] Sending email to participant:', toEmail, 'from:', fromEmail)
+        const { data, error: sendErr } = await resend.emails.send({
+          from: fromEmail,
+          to: toEmail,
+          subject: emailSubject,
+          html: emailHtml,
+        })
+        if (sendErr) {
+          emailError = sendErr.message || 'Failed to send email'
+          console.error('[registration-verify] Resend error:', sendErr)
+        } else {
+          emailSent = true
+          console.log('[registration-verify] Email sent successfully, id:', data?.id)
+        }
       }
+    } else {
+      emailError = 'Participant has no email address on file.'
+      console.warn('[registration-verify] Skipped send: no participant email')
     }
 
     return NextResponse.json({
       message: `Payment ${action === 'approve' ? 'verified' : 'rejected'} successfully`,
       registration: updatedRegistration,
+      emailSent,
+      emailError: emailError ?? undefined,
     })
   } catch (error: any) {
     console.error('Payment verification error:', error)

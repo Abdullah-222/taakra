@@ -11,6 +11,8 @@ const primaryLinks = [
   { href: '/competitions', label: 'Competitions' },
   { href: '/chat', label: 'Community' },
   { href: '/meeting', label: 'Meetings' },
+  { href: '/contact', label: 'Contact' },
+  { href: '/registrations', label: 'Registrations' },
 ]
 
 export function Navbar() {

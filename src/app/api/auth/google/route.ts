@@ -9,7 +9,8 @@ import { logActivity, notifyUser } from "@/lib/activity"
 const FIREBASE_PROJECT_ID = "libproject-90bd6"
 const FIREBASE_ISSUER = `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`
 const FIREBASE_JWKS = createRemoteJWKSet(
-  new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com")
+  new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"),
+  { timeoutDuration: 15_000 } // 15s — JWKS fetch can be slow on first request or behind strict networks
 )
 
 type FirebaseIdTokenPayload = JWTPayload & {
@@ -127,6 +128,22 @@ export async function POST(request: NextRequest) {
     )
   } catch (error) {
     console.error("Google login error:", error)
+    const cause = error instanceof Error ? error.cause : undefined
+    const causeCode = cause && typeof cause === "object" && "code" in cause ? (cause as { code?: string }).code : undefined
+    const isNetworkError =
+      causeCode === "ETIMEDOUT" ||
+      causeCode === "ECONNREFUSED" ||
+      causeCode === "ENOTFOUND" ||
+      (error instanceof TypeError && /fetch failed/i.test(String(error.message)))
+    if (isNetworkError) {
+      return NextResponse.json(
+        {
+          error:
+            "Google sign-in is temporarily unavailable. Please check your internet connection and try again.",
+        },
+        { status: 503 }
+      )
+    }
     return NextResponse.json({ error: "Google sign-in failed" }, { status: 500 })
   }
 }
