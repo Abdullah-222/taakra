@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 
-// Cache user registrations for 30 seconds
-export const revalidate = 30
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {

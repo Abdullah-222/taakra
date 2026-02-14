@@ -683,6 +683,7 @@ export default function ProfilePage() {
                 </div>
               )}
             </section>
+            </>
           )}
 
           {/* Notifications Tab */}

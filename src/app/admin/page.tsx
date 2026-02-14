@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { AIInsights } from '@/components/admin/AIInsights'
 import { theme } from '@/lib/theme'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminDashboardPage() {
   const [totalProperties, recentProperties, recentActivities] =
     await Promise.all([
