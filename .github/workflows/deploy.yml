@@ -19,7 +19,7 @@ jobs:
           # Connect to server and deploy
           ssh -i ~/ssh_key -o StrictHostKeyChecking=no root@147.182.206.208 << 'EOF'
             # Navigate to project directory (update path if different)
-            cd ~/taakra/http || { echo "Project directory not found"; exit 1; }
+            cd ~/taakra || { echo "Project directory not found"; exit 1; }
 
             # Pull latest code
             git pull origin main
