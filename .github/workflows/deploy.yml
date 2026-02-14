@@ -22,11 +22,10 @@ jobs:
 
             pnpm install &&
 
-            pm2 delete taakra || true &&
+            pnpm install &&
 
-            pm2 start "pnpm dev" --name taakra &&
+            pm2 restart taakra || pm2 start "pnpm dev" --name taakra &&
 
             pm2 save &&
-
             echo "Dev deployed successfully!!!!!"
           EOF
