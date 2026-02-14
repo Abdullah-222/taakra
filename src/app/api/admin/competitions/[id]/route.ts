@@ -76,7 +76,7 @@ export async function PUT(
     }
 
     const body = await req.json()
-    const { title, description, category, subcategory, deadline, prize, tags, status, images, videos } = body
+    const { title, description, rules, category, subcategory, deadline, prize, tags, status, images, videos } = body
 
     // Validation
     if (!title || !description || !category || !deadline || !prize) {
@@ -100,6 +100,7 @@ export async function PUT(
       data: {
         title: title.trim(),
         description: description.trim(),
+        rules: rules?.trim() || null,
         category: category.trim(),
         subcategory: subcategory?.trim() || null,
         deadline: deadlineDate,

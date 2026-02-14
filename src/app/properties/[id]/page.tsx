@@ -2,7 +2,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { HomeFooter } from '@/components/home/HomeFooter'
-import { HomeNav } from '@/components/home/HomeNav'
 import { logActivity } from '@/lib/activity'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -41,8 +40,6 @@ export default async function PropertyDetailPage({ params }: PageProps) {
 
   return (
     <div className="page-shell min-h-screen">
-      <HomeNav />
-
       <main className="py-8 sm:py-10">
         <div className="content-wrap">
           <Link href="/competitions" className="btn-secondary mb-5 inline-flex px-3 py-1.5 text-xs">

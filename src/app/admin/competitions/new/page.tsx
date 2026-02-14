@@ -21,6 +21,7 @@ export default function AdminNewCompetitionPage() {
   const { theme: currentTheme } = useTheme()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [rules, setRules] = useState('')
   const [category, setCategory] = useState('')
   const [subcategory, setSubcategory] = useState('')
   const [deadline, setDeadline] = useState('')
@@ -182,6 +183,7 @@ export default function AdminNewCompetitionPage() {
           body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
+          rules: rules.trim() || null,
           category: category.trim(),
           subcategory: subcategory.trim() || null,
           deadline: new Date(deadline).toISOString(),
@@ -312,13 +314,50 @@ export default function AdminNewCompetitionPage() {
                 e.currentTarget.style.boxShadow = 'none'
                 e.currentTarget.style.border = 'var(--input-border)'
               }}
-              placeholder="Describe the competition, rules, requirements, and what participants can expect..."
+              placeholder="Describe the competition, requirements, and what participants can expect..."
             />
             {formErrors.description && (
               <p className="mt-1 text-xs" style={{ color: theme.colors.danger }}>
                 {formErrors.description}
               </p>
             )}
+          </div>
+
+          {/* Rules of competition */}
+          <div>
+            <label
+              htmlFor="rules"
+              className="block text-sm font-medium mb-2"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              Rules of competition
+            </label>
+            <textarea
+              id="rules"
+              value={rules}
+              onChange={(e) => setRules(e.target.value)}
+              disabled={isSubmitting}
+              rows={6}
+              className="w-full px-4 py-3 text-sm transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none resize-y"
+              style={{
+                background: 'var(--input-bg)',
+                border: 'var(--input-border)',
+                borderRadius: theme.inputs.radius,
+                color: 'var(--input-text)',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.boxShadow = glowEffect
+                e.currentTarget.style.border = `1px solid var(--color-glacier-500)`
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.boxShadow = 'none'
+                e.currentTarget.style.border = 'var(--input-border)'
+              }}
+              placeholder="Enter the full rules of the competition as a paragraph (eligibility, submission guidelines, judging criteria, etc.)..."
+            />
+            <p className="mt-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              Optional. Shown to participants on the competition page.
+            </p>
           </div>
 
           {/* Category and Subcategory */}

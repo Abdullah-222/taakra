@@ -37,7 +37,11 @@ export default function AdminRegistrationsPage() {
     status: '',
     paymentStatus: '',
     competitionId: '',
+    search: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc' as 'asc' | 'desc',
   })
+  const [searchInput, setSearchInput] = useState('')
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -51,6 +55,9 @@ export default function AdminRegistrationsPage() {
       if (filters.status) params.append('status', filters.status)
       if (filters.paymentStatus) params.append('paymentStatus', filters.paymentStatus)
       if (filters.competitionId) params.append('competitionId', filters.competitionId)
+      if (filters.search.trim()) params.append('search', filters.search.trim())
+      if (filters.sortBy) params.append('sortBy', filters.sortBy)
+      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder)
 
       const response = await fetch(`/api/admin/registrations?${params.toString()}`)
       if (!response.ok) throw new Error('Failed to fetch registrations')
@@ -93,9 +100,9 @@ export default function AdminRegistrationsPage() {
           </p>
         </div>
 
-        {/* Filters */}
+        {/* Filters, Search & Sort */}
         <div
-          className="mb-6 p-4 rounded-2xl backdrop-blur-xl"
+          className="mb-6 p-5 rounded-2xl backdrop-blur-xl"
           style={{
             background: 'var(--glass-bg)',
             border: '1px solid var(--glass-border)',
@@ -103,7 +110,7 @@ export default function AdminRegistrationsPage() {
             borderRadius: theme.radius.lg,
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-3 mb-4">
             <div>
               <label
                 className="block mb-2 text-sm font-medium"
@@ -173,6 +180,73 @@ export default function AdminRegistrationsPage() {
                 }}
               />
             </div>
+          </div>
+          <div className="flex flex-wrap gap-3 items-end border-t pt-4" style={{ borderColor: 'var(--glass-border)' }}>
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  setFilters((f) => ({ ...f, search: searchInput.trim() }))
+                }
+              }}
+              placeholder="Search by email, name, competition, transaction ID..."
+              className="px-4 py-2 text-sm w-64 max-w-full"
+              style={{
+                background: 'var(--input-bg)',
+                border: 'var(--input-border)',
+                borderRadius: theme.inputs.radius,
+                color: 'var(--input-text)',
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setFilters((f) => ({ ...f, search: searchInput.trim() }))}
+              className="px-4 py-2 text-sm font-medium rounded-xl"
+              style={{
+                background: theme.buttons.primary.background,
+                color: theme.buttons.primary.color,
+                borderRadius: theme.radius.md,
+              }}
+            >
+              Search
+            </button>
+            <label className="text-sm font-medium shrink-0" style={{ color: 'var(--color-text-primary)' }}>
+              Sort by:
+            </label>
+            <select
+              value={filters.sortBy}
+              onChange={(e) => setFilters((f) => ({ ...f, sortBy: e.target.value }))}
+              className="px-4 py-2 text-sm min-w-[160px]"
+              style={{
+                background: 'var(--input-bg)',
+                border: 'var(--input-border)',
+                borderRadius: theme.inputs.radius,
+                color: 'var(--input-text)',
+              }}
+            >
+              <option value="createdAt">Date</option>
+              <option value="paymentStatus">Payment status</option>
+              <option value="status">Registration status</option>
+              <option value="userEmail">User email</option>
+              <option value="competitionTitle">Competition title</option>
+            </select>
+            <select
+              value={filters.sortOrder}
+              onChange={(e) => setFilters((f) => ({ ...f, sortOrder: e.target.value as 'asc' | 'desc' }))}
+              className="px-4 py-2 text-sm min-w-[120px]"
+              style={{
+                background: 'var(--input-bg)',
+                border: 'var(--input-border)',
+                borderRadius: theme.inputs.radius,
+                color: 'var(--input-text)',
+              }}
+            >
+              <option value="desc">Newest first</option>
+              <option value="asc">Oldest first</option>
+            </select>
           </div>
         </div>
 

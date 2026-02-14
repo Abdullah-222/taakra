@@ -1,10 +1,35 @@
+import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { theme } from '../../../../theme'
 import { CreateCompetitionButton } from '@/components/admin/CreateCompetitionButton'
 import { CompetitionCard } from '@/components/admin/CompetitionCard'
 
-export default async function AdminCompetitionsPage() {
+const TABS = [
+  { value: 'all', label: 'All' },
+  { value: 'published', label: 'Published' },
+  { value: 'draft', label: 'Drafts' },
+  { value: 'closed', label: 'Closed' },
+] as const
+
+type PageProps = {
+  searchParams: Promise<{ tab?: string }>
+}
+
+export default async function AdminCompetitionsPage({ searchParams }: PageProps) {
+  const { tab } = await searchParams
+  const activeTab = (tab && TABS.some((t) => t.value === tab)) ? tab : 'all'
+
+  const statusFilter =
+    activeTab === 'all'
+      ? undefined
+      : activeTab === 'draft'
+        ? 'draft'
+        : activeTab === 'published'
+          ? 'published'
+          : 'closed'
+
   const competitions = await prisma.competition.findMany({
+    where: statusFilter ? { status: statusFilter } : undefined,
     orderBy: { createdAt: 'desc' },
     include: {
       createdBy: {
@@ -52,6 +77,33 @@ export default async function AdminCompetitionsPage() {
           </CreateCompetitionButton>
         </div>
 
+        {/* Tabs: All | Published | Drafts | Closed */}
+        <nav
+          className="flex flex-wrap gap-1 mb-6 p-1 rounded-2xl"
+          style={{
+            background: 'var(--glass-bg)',
+            border: '1px solid var(--glass-border)',
+          }}
+          aria-label="Competition status tabs"
+        >
+          {TABS.map((t) => {
+            const isActive = activeTab === t.value
+            return (
+              <Link
+                key={t.value}
+                href={t.value === 'all' ? '/admin/competitions' : `/admin/competitions?tab=${t.value}`}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
+                style={{
+                  background: isActive ? 'var(--color-glacier-500)' : 'transparent',
+                  color: isActive ? '#fff' : 'var(--color-text-secondary)',
+                }}
+              >
+                {t.label}
+              </Link>
+            )
+          })}
+        </nav>
+
         {/* Competitions List */}
         {competitions.length === 0 ? (
           <div
@@ -68,17 +120,24 @@ export default async function AdminCompetitionsPage() {
               className="text-xl font-semibold mb-2"
               style={{ color: 'var(--color-text-primary)' }}
             >
-              No competitions yet
+              {activeTab === 'all' && 'No competitions yet'}
+              {activeTab === 'published' && 'No published competitions'}
+              {activeTab === 'draft' && 'No drafts'}
+              {activeTab === 'closed' && 'No closed competitions'}
             </h3>
             <p
               className="text-sm mb-6"
               style={{ color: 'var(--color-text-muted)' }}
             >
-              Create your first competition snowflake to get started
+              {activeTab === 'draft' || activeTab === 'all'
+                ? 'Create your first competition snowflake to get started'
+                : `No competitions in this category. Switch to another tab or create a new one.`}
             </p>
-            <CreateCompetitionButton href="/admin/competitions/new" className="inline-block">
-              Create Competition ❄️
-            </CreateCompetitionButton>
+            {(activeTab === 'all' || activeTab === 'draft') && (
+              <CreateCompetitionButton href="/admin/competitions/new" className="inline-block">
+                Create Competition ❄️
+              </CreateCompetitionButton>
+            )}
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -1,4 +1,3 @@
-import { HomeNav } from '@/components/home/HomeNav'
 import { HeroSection } from '@/components/home/HeroSection'
 import { StatsSection } from '@/components/home/StatsSection'
 import { FeaturedCompetitionsSection } from '@/components/home/FeaturedCompetitionsSection'
@@ -9,7 +8,6 @@ import { theme } from '../../theme'
 export default async function Home() {
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: theme.colors.darkIce }}>
-      <HomeNav />
       <HeroSection />
       <StatsSection />
       <FeaturedCompetitionsSection />

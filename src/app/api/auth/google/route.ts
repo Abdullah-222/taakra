@@ -63,15 +63,13 @@ export async function POST(request: NextRequest) {
       })
     } else {
       isNewUser = true
-      const userCount = await prisma.user.count()
-      const role = userCount === 0 ? "admin" : "user"
-
+      // All new users are regular users; admin is created via seed script only
       user = await prisma.user.create({
         data: {
           email,
           name,
           imageUrl,
-          role,
+          role: "user",
           // Required by schema; random hash ensures no plaintext password is stored.
           password: await hashPassword(crypto.randomUUID()),
         },

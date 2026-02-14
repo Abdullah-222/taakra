@@ -39,10 +39,17 @@ type PaymentDetailModalProps = {
 function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailModalProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
-  const [rejectionReason, setRejectionReason] = useState('')
+  const [rejectionReason, setRejectionReason] = useState(registration?.rejectionReason || '')
   const [internalNotes, setInternalNotes] = useState(registration?.internalNotes || '')
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (registration) {
+      setRejectionReason(registration.rejectionReason || '')
+      setInternalNotes(registration.internalNotes || '')
+    }
+  }, [registration?.id, registration?.rejectionReason, registration?.internalNotes])
 
   if (!registration) return null
 
@@ -260,15 +267,25 @@ function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailMo
                   className={`relative w-full ${isZoomed ? 'h-auto' : 'h-[500px]'} cursor-zoom-in`}
                   onClick={() => setIsZoomed(!isZoomed)}
                 >
-                  <Image
-                    src={currentImage}
-                    alt="Payment slip"
-                    fill={!isZoomed}
-                    width={isZoomed ? undefined : 800}
-                    height={isZoomed ? undefined : 500}
-                    className={`object-contain ${isZoomed ? 'w-full h-auto' : ''}`}
-                    unoptimized
-                  />
+                  {isZoomed ? (
+                    <Image
+                      src={currentImage}
+                      alt="Payment slip"
+                      width={800}
+                      height={500}
+                      className="w-full h-auto object-contain"
+                      unoptimized
+                    />
+                  ) : (
+                    <Image
+                      src={currentImage}
+                      alt="Payment slip"
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 768px) 100vw, 800px"
+                      unoptimized
+                    />
+                  )}
                 </div>
               ) : (
                 <div className="w-full h-[500px] flex items-center justify-center" style={{ background: 'var(--input-bg)' }}>
@@ -369,40 +386,10 @@ function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailMo
             </div>
           )}
 
-          {/* Action Buttons */}
-          {registration.paymentStatus === 'pending' && (
-            <div className="flex gap-3 pt-4 border-t" style={{ borderColor: 'var(--glass-border)' }}>
-              <button
-                onClick={() => handleVerify('approve')}
-                disabled={isProcessing}
-                className="flex-1 px-6 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  background: theme.colors.success,
-                  color: '#ffffff',
-                  borderRadius: theme.buttons.primary.radius,
-                }}
-              >
-                {isProcessing ? 'Processing...' : '✓ Verify Payment'}
-              </button>
-              <button
-                onClick={() => handleVerify('reject')}
-                disabled={isProcessing}
-                className="flex-1 px-6 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  background: theme.colors.danger,
-                  color: '#ffffff',
-                  borderRadius: theme.buttons.primary.radius,
-                }}
-              >
-                {isProcessing ? 'Processing...' : '✗ Reject Payment'}
-              </button>
-            </div>
-          )}
-
-          {/* Current Status */}
+          {/* Current Status (always show when not pending) */}
           {registration.paymentStatus !== 'pending' && (
             <div
-              className="p-4 rounded-lg"
+              className="p-4 rounded-lg mb-4"
               style={{
                 background:
                   registration.paymentStatus === 'approved'
@@ -420,7 +407,7 @@ function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailMo
                     registration.paymentStatus === 'approved' ? theme.colors.success : theme.colors.danger,
                 }}
               >
-                Payment Status: {registration.paymentStatus === 'approved' ? 'Verified' : 'Rejected'}
+                Current: {registration.paymentStatus === 'approved' ? 'Verified' : 'Rejected'}
               </p>
               {registration.rejectionReason && (
                 <p
@@ -432,6 +419,37 @@ function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailMo
               )}
             </div>
           )}
+
+          {/* Action Buttons - always allow updating status; email sent on every change */}
+          <div className="flex gap-3 pt-4 border-t" style={{ borderColor: 'var(--glass-border)' }}>
+            <button
+              onClick={() => handleVerify('approve')}
+              disabled={isProcessing}
+              className="flex-1 px-6 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: theme.colors.success,
+                color: '#ffffff',
+                borderRadius: theme.buttons.primary.radius,
+              }}
+            >
+              {isProcessing ? 'Processing...' : '✓ Set to Approved'}
+            </button>
+            <button
+              onClick={() => handleVerify('reject')}
+              disabled={isProcessing}
+              className="flex-1 px-6 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: theme.colors.danger,
+                color: '#ffffff',
+                borderRadius: theme.buttons.primary.radius,
+              }}
+            >
+              {isProcessing ? 'Processing...' : '✗ Set to Rejected'}
+            </button>
+          </div>
+          <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+            Changing status will update the record and send an email to the participant.
+          </p>
         </div>
       </div>
     </div>
@@ -444,8 +462,12 @@ export default function AdminPaymentsPage() {
   const [loading, setLoading] = useState(true)
   const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null)
   const [filters, setFilters] = useState({
-    paymentStatus: 'pending', // Default to pending
+    paymentStatus: 'pending',
+    search: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc' as 'asc' | 'desc',
   })
+  const [searchInput, setSearchInput] = useState('')
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -457,6 +479,9 @@ export default function AdminPaymentsPage() {
     try {
       const params = new URLSearchParams()
       if (filters.paymentStatus) params.append('paymentStatus', filters.paymentStatus)
+      if (filters.search.trim()) params.append('search', filters.search.trim())
+      if (filters.sortBy) params.append('sortBy', filters.sortBy)
+      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder)
 
       const response = await fetch(`/api/admin/registrations?${params.toString()}`)
       if (!response.ok) throw new Error('Failed to fetch registrations')
@@ -501,6 +526,69 @@ export default function AdminPaymentsPage() {
     }
   }
 
+  const escapeCsvCell = (value: string | number | null | undefined): string => {
+    if (value === null || value === undefined) return ''
+    const s = String(value)
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return `"${s.replace(/"/g, '""')}"`
+    }
+    return s
+  }
+
+  const downloadPaymentsCsv = () => {
+    const headers = [
+      'Registration ID',
+      'User ID',
+      'User Email',
+      'User Name',
+      'User Snow Points',
+      'Competition ID',
+      'Competition Title',
+      'Competition Category',
+      'Competition Deadline',
+      'Competition Prize',
+      'Registration Status',
+      'Payment Status',
+      'Transaction ID',
+      'Rejection Reason',
+      'Internal Notes',
+      'Payment Slip Count',
+      'Payment Slip URLs',
+      'Created At',
+    ]
+    const rows = registrations.map((r) => [
+      r.id,
+      r.user.id,
+      r.user.email,
+      r.user.name ?? '',
+      r.user.snowPoints,
+      r.competition.id,
+      r.competition.title,
+      r.competition.category,
+      r.competition.deadline,
+      r.competition.prize,
+      r.status,
+      r.paymentStatus,
+      r.transactionId ?? '',
+      r.rejectionReason ?? '',
+      r.internalNotes ?? '',
+      r.paymentSlipUrls?.length ?? 0,
+      (r.paymentSlipUrls ?? []).join('; '),
+      r.createdAt,
+    ])
+    const csvContent = [
+      headers.map(escapeCsvCell).join(','),
+      ...rows.map((row) => row.map(escapeCsvCell).join(',')),
+    ].join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `payments-export-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   if (authLoading || loading) {
     return (
       <div className="p-8">
@@ -531,9 +619,9 @@ export default function AdminPaymentsPage() {
           </p>
         </div>
 
-        {/* Filters */}
+        {/* Filters, Search & Sort */}
         <div
-          className="mb-6 p-4 rounded-2xl backdrop-blur-xl"
+          className="mb-6 p-5 rounded-2xl backdrop-blur-xl"
           style={{
             background: 'var(--glass-bg)',
             border: '1px solid var(--glass-border)',
@@ -541,17 +629,17 @@ export default function AdminPaymentsPage() {
             borderRadius: theme.radius.lg,
           }}
         >
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-wrap gap-4 items-end">
             <label
-              className="text-sm font-medium"
+              className="text-sm font-medium shrink-0"
               style={{ color: 'var(--color-text-primary)' }}
             >
-              Filter by Status:
+              Status:
             </label>
             <select
               value={filters.paymentStatus}
               onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })}
-              className="px-4 py-2 text-sm"
+              className="px-4 py-2 text-sm min-w-[140px]"
               style={{
                 background: 'var(--input-bg)',
                 border: 'var(--input-border)',
@@ -560,12 +648,101 @@ export default function AdminPaymentsPage() {
               }}
             >
               <option value="">All Payments</option>
-              <option value="pending">Pending Payments</option>
-              <option value="approved">Verified Payments</option>
-              <option value="rejected">Rejected Payments</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Verified</option>
+              <option value="rejected">Rejected</option>
             </select>
-            <div className="ml-auto text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              {registrations.length} {registrations.length === 1 ? 'payment' : 'payments'}
+
+            <div className="flex flex-wrap gap-2 items-center">
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    setFilters((f) => ({ ...f, search: searchInput.trim() }))
+                  }
+                }}
+                placeholder="Search by email, name, competition, transaction ID..."
+                className="px-4 py-2 text-sm w-64 max-w-full"
+                style={{
+                  background: 'var(--input-bg)',
+                  border: 'var(--input-border)',
+                  borderRadius: theme.inputs.radius,
+                  color: 'var(--input-text)',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setFilters((f) => ({ ...f, search: searchInput.trim() }))}
+                className="px-4 py-2 text-sm font-medium rounded-xl"
+                style={{
+                  background: theme.buttons.primary.background,
+                  color: theme.buttons.primary.color,
+                  borderRadius: theme.radius.md,
+                }}
+              >
+                Search
+              </button>
+            </div>
+
+            <label
+              className="text-sm font-medium shrink-0 ml-auto sm:ml-0"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              Sort by:
+            </label>
+            <select
+              value={filters.sortBy}
+              onChange={(e) => setFilters((f) => ({ ...f, sortBy: e.target.value }))}
+              className="px-4 py-2 text-sm min-w-[160px]"
+              style={{
+                background: 'var(--input-bg)',
+                border: 'var(--input-border)',
+                borderRadius: theme.inputs.radius,
+                color: 'var(--input-text)',
+              }}
+            >
+              <option value="createdAt">Date</option>
+              <option value="paymentStatus">Payment status</option>
+              <option value="status">Registration status</option>
+              <option value="userEmail">User email</option>
+              <option value="competitionTitle">Competition title</option>
+            </select>
+            <select
+              value={filters.sortOrder}
+              onChange={(e) => setFilters((f) => ({ ...f, sortOrder: e.target.value as 'asc' | 'desc' }))}
+              className="px-4 py-2 text-sm min-w-[120px]"
+              style={{
+                background: 'var(--input-bg)',
+                border: 'var(--input-border)',
+                borderRadius: theme.inputs.radius,
+                color: 'var(--input-text)',
+              }}
+            >
+              <option value="desc">Newest first</option>
+              <option value="asc">Oldest first</option>
+            </select>
+
+            <div className="flex items-center gap-3 ml-auto">
+              <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                {registrations.length} {registrations.length === 1 ? 'payment' : 'payments'}
+              </span>
+              <button
+                type="button"
+                onClick={downloadPaymentsCsv}
+                disabled={registrations.length === 0}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
+                style={{
+                  background: theme.buttons.primary.background,
+                  color: theme.buttons.primary.color,
+                  borderRadius: theme.radius.md,
+                }}
+              >
+                <span aria-hidden>📥</span>
+                Download CSV
+              </button>
             </div>
           </div>
         </div>

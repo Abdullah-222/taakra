@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { HomeNav } from '@/components/home/HomeNav'
 import { HomeFooter } from '@/components/home/HomeFooter'
 import { theme } from '@/lib/theme'
 import { Snowfall } from '@/components/ui/Snowfall'
@@ -88,7 +87,6 @@ export default function RegistrationsPage() {
     return (
       <div className="min-h-screen relative" style={{ backgroundColor: 'var(--background)' }}>
         <Snowfall />
-        <HomeNav />
         <main className="py-10 sm:py-12 relative z-10 flex items-center justify-center">
           <p style={{ color: 'var(--color-text-muted)' }}>Loading...</p>
         </main>
@@ -101,7 +99,6 @@ export default function RegistrationsPage() {
     return (
       <div className="min-h-screen relative" style={{ backgroundColor: 'var(--background)' }}>
         <Snowfall />
-        <HomeNav />
         <main className="py-10 sm:py-12 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div
@@ -149,8 +146,6 @@ export default function RegistrationsPage() {
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: 'var(--background)' }}>
       <Snowfall />
-      <HomeNav />
-
       <main className="py-10 sm:py-12 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}

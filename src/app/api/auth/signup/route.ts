@@ -39,16 +39,13 @@ export async function POST(request: NextRequest) {
           throw new Error('DUPLICATE_USER')
         }
 
-        // First user becomes admin - check and create atomically
-        const userCount = await tx.user.count()
-        const role = userCount === 0 ? 'admin' : 'user'
-
+        // All new signups are regular users; admin is created via seed script only
         return await tx.user.create({
           data: {
             email,
             password: hashedPassword,
             name: name || null,
-            role,
+            role: 'user',
           },
         })
       })
