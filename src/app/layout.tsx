@@ -18,8 +18,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EstatePro - Find Your Dream Home | Premium Real Estate",
-  description: "Discover premium properties and expert real estate services. Buy, sell, or rent with EstatePro - your trusted partner in real estate.",
+  title: "TAAKRA - Competitions & Community Platform",
+  description: "Join TAAKRA for competitions, community engagement, and premium experiences. Your trusted platform for competitions and community.",
 };
 
 export default function RootLayout({
@@ -34,7 +34,7 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >

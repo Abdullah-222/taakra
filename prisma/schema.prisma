@@ -35,6 +35,8 @@ model User {
   competitions  Competition[]
   registrations CompetitionRegistration[]
   aiChatCache   AiChatCache[]
+  supportConversations SupportConversation[]
+  supportMessages      SupportMessage[]
 }
 
 model Property {
@@ -147,6 +149,7 @@ model Competition {
   videos            String[] // Array of video URLs
   status            String   @default("draft") // "draft" | "published" | "closed"
   registrationCount Int      @default(0)
+  difficulty        String? // "Beginner" | "Intermediate" | "Advanced" - AI generated
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -159,6 +162,7 @@ model Competition {
   @@index([status])
   @@index([deadline])
   @@index([createdAt])
+  @@index([difficulty])
 }
 
 model CompetitionRegistration {
@@ -198,5 +202,39 @@ model AiChatCache {
 
   @@index([promptHash])
   @@index([userId])
+  @@index([createdAt])
+}
+
+// Support conversations between users and admins
+model SupportConversation {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   String?  // Optional subject/title for the conversation
+  status    String   @default("open") // "open" | "closed" | "resolved"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages SupportMessage[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([status, updatedAt])
+  @@index([createdAt])
+}
+
+// Messages within support conversations
+model SupportMessage {
+  id             Int                 @id @default(autoincrement())
+  conversationId Int
+  conversation   SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  authorId       Int
+  author         User                 @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content        String
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([conversationId])
+  @@index([authorId])
   @@index([createdAt])
 }

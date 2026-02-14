@@ -41,8 +41,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Process message through AI service
-    const response = await processChatMessage(message, userId)
+    // Get current page from referer if available
+    const referer = req.headers.get('referer') || ''
+    const currentPage = referer ? new URL(referer).pathname : undefined
+
+    // Process message through AI service with context
+    const { processChatMessageWithContext } = await import('@/lib/ai/ai.service')
+    const response = await processChatMessageWithContext(message, userId, currentPage)
 
     // Return response
     return NextResponse.json({

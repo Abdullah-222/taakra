@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { theme } from '@/lib/theme'
 import { AdminNotificationsBell } from '@/components/admin/AdminNotificationsBell'
 
 const navItems = [
@@ -13,6 +14,7 @@ const navItems = [
   { href: '/admin/payments', label: 'Payments', icon: '💳' },
   { href: '/admin/registrations', label: 'Registrations', icon: '📝' },
   { href: '/admin/requests', label: 'Requests', icon: '📅' },
+  { href: '/admin/support', label: 'Support', icon: '💬' },
   { href: '/admin/users', label: 'User Management', icon: '👥' },
   { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
 ]
@@ -50,8 +52,8 @@ export default function AdminLayout({
 
   if (loading || adminRole === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50 dark:bg-gray-900">
-        <div className="text-stone-600 dark:text-gray-400">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
+        <div style={{ color: theme.colors.textMuted }}>Loading...</div>
       </div>
     )
   }
@@ -61,14 +63,29 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-gray-900 flex">
+    <div className="min-h-screen flex" style={{ background: 'var(--background)' }}>
       {/* Sidebar */}
-      <aside className="w-64 bg-white dark:bg-gray-800 border-r border-stone-200 dark:border-gray-700 flex flex-col shrink-0">
-        <div className="p-6 border-b border-stone-200 dark:border-gray-700">
-          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 dark:from-emerald-500 dark:to-emerald-400 bg-clip-text text-transparent">
-            EstatePro
+      <aside 
+        className="w-64 flex flex-col shrink-0 transition-all duration-300"
+        style={{
+          background: theme.glass.background,
+          backdropFilter: theme.glass.blur,
+          borderRight: theme.glass.border,
+        }}
+      >
+        <div 
+          className="p-6"
+          style={{
+            borderBottom: theme.glass.border,
+          }}
+        >
+          <Link 
+            href="/" 
+            className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 dark:from-emerald-500 dark:to-emerald-400 bg-clip-text text-transparent"
+          >
+            TAAKRA
           </Link>
-          <p className="text-xs text-stone-500 dark:text-gray-400 mt-1">Admin</p>
+          <p className="text-xs mt-1" style={{ color: theme.colors.textMuted }}>Admin</p>
         </div>
         <nav className="p-4 space-y-1 flex-1">
           {navItems.map((item) => {
@@ -77,26 +94,58 @@ export default function AdminLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                    : 'text-stone-700 dark:text-gray-300 hover:bg-stone-100 dark:hover:bg-gray-700'
-                }`}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-[1.02]"
+                style={{
+                  background: isActive
+                    ? 'rgba(16, 185, 129, 0.15)'
+                    : 'transparent',
+                  color: isActive
+                    ? theme.colors.success
+                    : theme.colors.textSecondary,
+                  border: isActive ? `1px solid ${theme.colors.success}40` : '1px solid transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent'
+                  }
+                }}
               >
                 <span className="text-lg">{item.icon}</span>
                 {item.label}
               </Link>
             )
           })}
-          <div className="pt-4 mt-4 border-t border-stone-200 dark:border-gray-700">
-            <p className="px-4 text-xs font-semibold text-stone-400 dark:text-gray-500 uppercase tracking-wider">
+          <div 
+            className="pt-4 mt-4"
+            style={{
+              borderTop: theme.glass.border,
+            }}
+          >
+            <p 
+              className="px-4 text-xs font-semibold uppercase tracking-wider"
+              style={{ color: theme.colors.textMuted }}
+            >
               More
             </p>
             {dummyNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-stone-600 dark:text-gray-400 hover:bg-stone-100 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-[1.02]"
+                style={{
+                  color: theme.colors.textSecondary,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent'
+                }}
               >
                 <span className="text-lg">{item.icon}</span>
                 {item.label}
@@ -104,20 +153,50 @@ export default function AdminLayout({
             ))}
           </div>
         </nav>
-        <div className="p-4 border-t border-stone-200 dark:border-gray-700">
-          <div className="px-4 py-2 text-sm text-stone-600 dark:text-gray-400 truncate">
+        <div 
+          className="p-4"
+          style={{
+            borderTop: theme.glass.border,
+          }}
+        >
+          <div 
+            className="px-4 py-2 text-sm truncate"
+            style={{ color: theme.colors.textSecondary }}
+          >
             {user.email}
           </div>
           <div className="flex gap-2">
             <Link
               href="/"
-              className="flex-1 text-center px-3 py-2 text-sm font-medium text-stone-600 dark:text-gray-400 hover:bg-stone-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex-1 text-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-[1.02]"
+              style={{
+                color: theme.colors.textSecondary,
+                background: 'transparent',
+                border: theme.glass.border,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+              }}
             >
               Site
             </Link>
             <button
               onClick={() => logout()}
-              className="flex-1 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              className="flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-[1.02]"
+              style={{
+                color: theme.colors.danger,
+                background: 'transparent',
+                border: theme.glass.border,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+              }}
             >
               Logout
             </button>
@@ -125,13 +204,28 @@ export default function AdminLayout({
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
-        <div className="sticky top-0 z-30 border-b border-stone-200 bg-white/95 px-6 py-3 backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
+        <div 
+          className="sticky top-0 z-30 px-6 py-3 backdrop-blur transition-all duration-300 glass-animated"
+          style={{
+            background: theme.glass.background,
+            borderBottom: theme.glass.border,
+            backdropFilter: theme.glass.blur,
+          }}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-400 dark:text-gray-500">
+              <p 
+                className="text-xs font-semibold uppercase tracking-[0.2em]"
+                style={{ color: theme.colors.textMuted }}
+              >
                 Admin Console
               </p>
-              <h2 className="text-lg font-semibold text-stone-800 dark:text-gray-100">Overview</h2>
+              <h2 
+                className="text-lg font-semibold"
+                style={{ color: theme.colors.textPrimary }}
+              >
+                Overview
+              </h2>
             </div>
             <AdminNotificationsBell userId={user.id} />
           </div>

@@ -139,7 +139,7 @@ export function CompetitionCard({
         <span
           className="text-2xl"
           style={{
-            filter: `drop-shadow(${theme.glow.ice})`,
+            filter: `drop-shadow(${theme.glow.strong})`,
           }}
         >
           ❄

@@ -25,7 +25,7 @@ export function WhyChooseUsSection() {
       <div className="content-wrap">
         <div className="grid items-start gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="surface-card p-6 sm:p-8">
-            <h2 className="section-title">Why Teams Choose EstatePro</h2>
+            <h2 className="section-title">Why Teams Choose TAAKRA</h2>
             <p className="section-copy mt-3 text-base">
               Designed for serious property operations, with interfaces that are
               fast to read and easy to act on.

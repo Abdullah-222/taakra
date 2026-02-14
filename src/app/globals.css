@@ -122,6 +122,85 @@ a {
   box-sizing: border-box;
 }
 
+/* Glassmorphism Animations */
+@keyframes glass-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes glass-glow {
+  0%, 100% {
+    box-shadow: var(--glass-shadow);
+  }
+  50% {
+    box-shadow: var(--glass-shadow), 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+}
+
+@keyframes glass-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.01);
+  }
+}
+
+@keyframes glass-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Glassmorphism utility classes */
+.glass-animated {
+  animation: glass-glow 3s ease-in-out infinite;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-animated:hover {
+  animation: glass-pulse 2s ease-in-out infinite;
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow), 0 8px 24px rgba(59, 130, 246, 0.2);
+}
+
+.glass-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  background-size: 1000px 100%;
+  animation: glass-shimmer 3s infinite;
+}
+
+.glass-float {
+  animation: glass-float 6s ease-in-out infinite;
+}
+
+/* Smooth transitions for glass elements */
+[style*="--glass-bg"],
+[style*="glass-bg"] {
+  transition: background 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Smooth navbar transitions */
+header[class*="fixed"] {
+  will-change: transform, margin;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
 @media (min-width: 640px) {
   .content-wrap {
     padding-inline: 1.5rem;

@@ -44,7 +44,7 @@ export default function ContactPage() {
   return (
     <div
       className="min-h-screen relative overflow-hidden"
-      style={{ background: theme.colors.darkIce }}
+      style={{ background: 'var(--background)' }}
     >
       <Snowfall />
 

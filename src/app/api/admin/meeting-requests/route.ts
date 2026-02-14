@@ -194,7 +194,7 @@ export async function POST(req: NextRequest) {
               If you have any questions, please contact us.
             </p>
             <p style="margin-top: 24px; color: #6b7280; font-size: 12px;">
-              — EstatePro Team
+              — TAAKRA Team
             </p>
           </div>
         `,

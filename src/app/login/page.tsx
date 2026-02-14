@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { Snowfall } from '@/components/ui/Snowfall'
-import { theme } from '../../../theme'
+import { theme } from '@/lib/theme'
 
 export default function LoginPage() {
   const { theme: currentTheme } = useTheme()

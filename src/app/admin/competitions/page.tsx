@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
-import { theme } from '../../../../theme'
+import { theme } from '@/lib/theme'
 import { CreateCompetitionButton } from '@/components/admin/CreateCompetitionButton'
 import { CompetitionCard } from '@/components/admin/CompetitionCard'
 

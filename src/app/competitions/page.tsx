@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { HomeFooter } from '@/components/home/HomeFooter'
-import { theme } from '../../../theme'
+import { theme } from '@/lib/theme'
 import { Snowfall } from '@/components/ui/Snowfall'
 
 type Competition = {
@@ -18,6 +18,7 @@ type Competition = {
   tags: string[]
   images: string[]
   status: string
+  difficulty?: string | null
   _count: {
     registrations: number
   }
@@ -87,15 +88,74 @@ export default function CompetitionsPage() {
     const now = new Date()
     const diff = date.getTime() - now.getTime()
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+    const hours = Math.ceil(diff / (1000 * 60 * 60))
+    const minutes = Math.ceil(diff / (1000 * 60))
 
-    if (days < 0) return { text: 'Expired', color: theme.colors.danger }
-    if (days === 0) return { text: 'Today', color: theme.colors.warning }
-    if (days === 1) return { text: 'Tomorrow', color: theme.colors.warning }
-    if (days <= 7) return { text: `${days} days left`, color: theme.colors.warning }
-    return { text: date.toLocaleDateString(), color: theme.colors.success }
+    if (days < 0) {
+      return { 
+        text: 'Expired', 
+        color: theme.colors.danger, 
+        urgency: 'expired',
+        days,
+        fullDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      }
+    }
+    if (days === 0 && hours > 0) {
+      return { 
+        text: `${hours}h left`, 
+        color: theme.colors.danger, 
+        urgency: 'critical',
+        days: 0,
+        hours,
+        fullDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      }
+    }
+    if (days === 0) {
+      return { 
+        text: 'Today', 
+        color: theme.colors.danger, 
+        urgency: 'critical',
+        days: 0,
+        fullDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      }
+    }
+    if (days === 1) {
+      return { 
+        text: 'Tomorrow', 
+        color: theme.colors.warning, 
+        urgency: 'urgent',
+        days: 1,
+        fullDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      }
+    }
+    if (days <= 7) {
+      return { 
+        text: `${days} days left`, 
+        color: theme.colors.warning, 
+        urgency: 'soon',
+        days,
+        fullDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      }
+    }
+    if (days <= 30) {
+      return { 
+        text: `${days} days left`, 
+        color: theme.colors.success, 
+        urgency: 'moderate',
+        days,
+        fullDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      }
+    }
+    return { 
+      text: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 
+      color: theme.colors.success, 
+      urgency: 'safe',
+      days,
+      fullDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    }
   }
 
-  const glowEffect = currentTheme === 'dark' ? theme.glow.ice : '0 0 10px rgba(54, 158, 255, 0.15)'
+  const glowEffect = currentTheme === 'dark' ? theme.glow.strong : '0 0 10px rgba(54, 158, 255, 0.15)'
 
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: 'var(--background)' }}>
@@ -327,27 +387,58 @@ export default function CompetitionsPage() {
                           <span className="text-6xl opacity-50">❄️</span>
                         </div>
                       )}
-                      {/* Deadline Badge */}
-                      <div
-                        className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm"
-                        style={{
-                          background: `${deadlineInfo.color}20`,
-                          color: deadlineInfo.color,
-                          border: `1px solid ${deadlineInfo.color}`,
-                        }}
-                      >
-                        {deadlineInfo.text}
+                      {/* Deadline Badge with urgency indicator */}
+                      <div className="absolute top-3 right-3 flex items-center gap-2">
+                        {(deadlineInfo.urgency === 'critical' || deadlineInfo.urgency === 'urgent') && (
+                          <span 
+                            className="w-2 h-2 rounded-full animate-pulse"
+                            style={{
+                              background: deadlineInfo.color,
+                              boxShadow: `0 0 8px ${deadlineInfo.color}`,
+                            }}
+                          />
+                        )}
+                        <div
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md transition-all duration-300 ${
+                            deadlineInfo.urgency === 'critical' || deadlineInfo.urgency === 'urgent' 
+                              ? 'animate-pulse' 
+                              : ''
+                          }`}
+                          style={{
+                            background: `${deadlineInfo.color}25`,
+                            color: deadlineInfo.color,
+                            border: `1.5px solid ${deadlineInfo.color}`,
+                            boxShadow: deadlineInfo.urgency === 'critical' 
+                              ? `0 0 12px ${deadlineInfo.color}60` 
+                              : 'none',
+                          }}
+                        >
+                          {deadlineInfo.text}
+                        </div>
                       </div>
                     </div>
 
                     <div className="p-5">
-                      {/* Category */}
-                      <p
-                        className="text-xs uppercase tracking-wider mb-2"
-                        style={{ color: 'var(--color-text-muted)' }}
-                      >
-                        {competition.category}
-                      </p>
+                      {/* Category and Difficulty */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <p
+                          className="text-xs uppercase tracking-wider"
+                          style={{ color: 'var(--color-text-muted)' }}
+                        >
+                          {competition.category}
+                        </p>
+                        {competition.difficulty && (
+                          <span
+                            className="px-2 py-0.5 rounded text-xs font-semibold"
+                            style={{
+                              background: `${theme.colors.glacier500}20`,
+                              color: theme.colors.glacier500,
+                            }}
+                          >
+                            {competition.difficulty}
+                          </span>
+                        )}
+                      </div>
 
                       {/* Title */}
                       <h2
@@ -391,6 +482,67 @@ export default function CompetitionsPage() {
                           )}
                         </div>
                       )}
+
+                      {/* Deadline Section */}
+                      <div 
+                        className="mb-3 p-3 rounded-xl transition-all duration-300"
+                        style={{
+                          background: deadlineInfo.urgency === 'critical' 
+                            ? `${deadlineInfo.color}15`
+                            : deadlineInfo.urgency === 'urgent'
+                            ? `${deadlineInfo.color}10`
+                            : 'rgba(255, 255, 255, 0.03)',
+                          border: `1px solid ${deadlineInfo.color}30`,
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">⏰</span>
+                            <p
+                              className="text-xs font-semibold uppercase tracking-wider"
+                              style={{ color: 'var(--color-text-muted)' }}
+                            >
+                              Deadline
+                            </p>
+                          </div>
+                          <p
+                            className="text-xs font-bold"
+                            style={{ color: deadlineInfo.color }}
+                          >
+                            {deadlineInfo.fullDate}
+                          </p>
+                        </div>
+                        {/* Progress Bar */}
+                        {deadlineInfo.urgency !== 'expired' && (
+                          <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.1)' }}>
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: deadlineInfo.urgency === 'critical' 
+                                  ? '95%'
+                                  : deadlineInfo.urgency === 'urgent'
+                                  ? '85%'
+                                  : deadlineInfo.urgency === 'soon'
+                                  ? `${Math.max(60, 100 - (deadlineInfo.days || 0) * 2)}%`
+                                  : deadlineInfo.urgency === 'moderate'
+                                  ? `${Math.max(30, 100 - (deadlineInfo.days || 0) * 1.5)}%`
+                                  : '20%',
+                                background: deadlineInfo.urgency === 'critical' || deadlineInfo.urgency === 'urgent'
+                                  ? `linear-gradient(90deg, ${deadlineInfo.color}, ${deadlineInfo.color}80)`
+                                  : `linear-gradient(90deg, ${deadlineInfo.color}, ${theme.colors.success})`,
+                                boxShadow: deadlineInfo.urgency === 'critical' 
+                                  ? `0 0 8px ${deadlineInfo.color}60` 
+                                  : 'none',
+                              }}
+                            />
+                          </div>
+                        )}
+                        {deadlineInfo.urgency === 'expired' && (
+                          <p className="text-xs mt-1" style={{ color: deadlineInfo.color }}>
+                            This competition has ended
+                          </p>
+                        )}
+                      </div>
 
                       {/* Prize and Registrations */}
                       <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: 'var(--glass-border)' }}>

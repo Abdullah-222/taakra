@@ -20,7 +20,7 @@ export function MediaDropzone({
 }: MediaDropzoneProps) {
   const { theme: currentTheme } = useTheme()
   const inputId = `dropzone-${accept}-${Math.random().toString(36).slice(2)}`
-  const glowEffect = currentTheme === 'dark' ? theme.glow.ice : '0 0 10px rgba(54, 158, 255, 0.15)'
+  const glowEffect = currentTheme === 'dark' ? theme.glow.strong : '0 0 10px rgba(54, 158, 255, 0.15)'
 
   return (
     <div>
