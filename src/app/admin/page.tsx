@@ -233,16 +233,10 @@ export default async function AdminDashboardPage() {
                 <Link
                   key={property.id}
                   href={`/competitions/${property.id}`}
-                  className="flex items-start gap-3 p-3 rounded-lg transition-all duration-200 hover:scale-[1.01]"
+                  className="flex items-start gap-3 p-3 rounded-lg transition-all duration-200 hover:scale-[1.01] hover:bg-[rgba(255,255,255,0.05)]"
                   style={{
                     background: 'rgba(255, 255, 255, 0.03)',
                     border: theme.glass.border,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
                   }}
                 >
                   <div className="text-xl">🏠</div>
@@ -291,17 +285,11 @@ export default async function AdminDashboardPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Link
             href="/admin/competitions/new"
-            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105"
+            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-[rgba(16,185,129,0.25)]"
             style={{
               background: 'rgba(16, 185, 129, 0.15)',
               border: `1px solid ${theme.colors.success}40`,
               color: theme.colors.success,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(16, 185, 129, 0.25)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'
             }}
           >
             <span className="text-2xl">➕</span>
@@ -309,17 +297,11 @@ export default async function AdminDashboardPage() {
           </Link>
           <Link
             href="/admin/competitions"
-            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105"
+            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-[rgba(255,255,255,0.05)]"
             style={{
               background: 'rgba(255, 255, 255, 0.03)',
               border: theme.glass.border,
               color: theme.colors.textSecondary,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
             }}
           >
             <span className="text-2xl">❄️</span>
@@ -327,17 +309,11 @@ export default async function AdminDashboardPage() {
           </Link>
           <Link
             href="/admin/users"
-            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105"
+            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-[rgba(255,255,255,0.05)]"
             style={{
               background: 'rgba(255, 255, 255, 0.03)',
               border: theme.glass.border,
               color: theme.colors.textSecondary,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
             }}
           >
             <span className="text-2xl">👥</span>
@@ -345,17 +321,11 @@ export default async function AdminDashboardPage() {
           </Link>
           <Link
             href="/admin/analytics"
-            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105"
+            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-[rgba(255,255,255,0.05)]"
             style={{
               background: 'rgba(255, 255, 255, 0.03)',
               border: theme.glass.border,
               color: theme.colors.textSecondary,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
             }}
           >
             <span className="text-2xl">📈</span>
