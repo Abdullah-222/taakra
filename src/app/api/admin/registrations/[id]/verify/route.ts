@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Resend } from 'resend'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { notifyUser } from '@/lib/activity'
+
+const resend = new Resend(process.env.RESEND_SECRET_KEY)
+const fromEmail = process.env.RESEND_FROM_EMAIL || 'EstatePro <onboarding@resend.dev>'
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -26,13 +38,15 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid action. Must be "approve" or "reject"' }, { status: 400 })
     }
 
-    // Get registration with competition info
+    // Get registration with competition info (including deadline for email)
     const registration = await prisma.competitionRegistration.findUnique({
       where: { id: registrationId },
       include: {
         competition: {
           select: {
             title: true,
+            deadline: true,
+            category: true,
           },
         },
         user: {
@@ -48,9 +62,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'Registration not found' }, { status: 404 })
     }
 
-    // Update registration
+    // Update registration (allow updating status anytime: pending → approved/rejected, or flipping approved ↔ rejected)
     const updateData: any = {
       paymentStatus: action === 'approve' ? 'approved' : 'rejected',
+      status: action === 'approve' ? 'approved' : 'rejected',
       updatedAt: new Date(),
     }
 
@@ -63,7 +78,6 @@ export async function PATCH(
       }
       updateData.rejectionReason = rejectionReason.trim()
     } else {
-      // Clear rejection reason when approving
       updateData.rejectionReason = null
     }
 
@@ -89,15 +103,7 @@ export async function PATCH(
       },
     })
 
-    // If payment is approved, also approve the registration
-    if (action === 'approve' && registration.status === 'pending') {
-      await prisma.competitionRegistration.update({
-        where: { id: registrationId },
-        data: { status: 'approved' },
-      })
-    }
-
-    // Notify user
+    // Notify user in-app
     if (action === 'approve') {
       await notifyUser({
         userId: registration.userId,
@@ -116,6 +122,66 @@ export async function PATCH(
         entityType: 'competition',
         entityId: registration.competitionId,
       })
+    }
+
+    // Email participant via Resend
+    const competitionDate = new Date(registration.competition.deadline)
+    const formattedDate = competitionDate.toLocaleString('en-US', {
+      dateStyle: 'full',
+      timeStyle: 'short',
+    })
+    const participantName = escapeHtml(registration.user.name?.trim() || registration.user.email)
+    const compTitle = escapeHtml(registration.competition.title)
+    const compCategory = registration.competition.category ? escapeHtml(registration.competition.category) : ''
+    const reasonEscaped = escapeHtml((rejectionReason || 'No reason provided.').trim())
+    const isApproved = action === 'approve'
+
+    const emailSubject = isApproved
+      ? `✅ Approved: ${registration.competition.title}`
+      : `❌ Registration update: ${registration.competition.title}`
+
+    const emailHtml = isApproved
+      ? `
+        <div style="font-family: system-ui, sans-serif; max-width: 560px; margin: 0 auto;">
+          <h2 style="color: #0f766e;">Payment approved</h2>
+          <p>Hi ${participantName},</p>
+          <p>Your payment for <strong>${compTitle}</strong> has been <strong>verified and approved</strong> by our team.</p>
+          <div style="background: #f0fdfa; border-left: 4px solid #0d9488; padding: 12px 16px; margin: 16px 0;">
+            <p style="margin: 0;"><strong>Competition:</strong> ${compTitle}</p>
+            <p style="margin: 8px 0 0 0;"><strong>Date &amp; time:</strong> ${formattedDate}</p>
+            ${compCategory ? `<p style="margin: 8px 0 0 0;"><strong>Category:</strong> ${compCategory}</p>` : ''}
+          </div>
+          <p>You're all set. We'll see you there.</p>
+          <p>— EstatePro Team</p>
+        </div>
+      `
+      : `
+        <div style="font-family: system-ui, sans-serif; max-width: 560px; margin: 0 auto;">
+          <h2 style="color: #b91c1c;">Registration / payment not approved</h2>
+          <p>Hi ${participantName},</p>
+          <p>Your registration or payment for <strong>${compTitle}</strong> could not be approved.</p>
+          <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 12px 16px; margin: 16px 0;">
+            <p style="margin: 0;"><strong>Competition:</strong> ${compTitle}</p>
+            <p style="margin: 8px 0 0 0;"><strong>Date &amp; time:</strong> ${formattedDate}</p>
+            ${compCategory ? `<p style="margin: 8px 0 0 0;"><strong>Category:</strong> ${compCategory}</p>` : ''}
+            <p style="margin: 12px 0 0 0;"><strong>Reason:</strong> ${reasonEscaped}</p>
+          </div>
+          <p>If you have questions, please reply to this email or contact support.</p>
+          <p>— EstatePro Team</p>
+        </div>
+      `
+
+    if (registration.user.email) {
+      const { error: emailError } = await resend.emails.send({
+        from: fromEmail,
+        to: registration.user.email,
+        subject: emailSubject,
+        html: emailHtml,
+      })
+      if (emailError) {
+        console.error('Resend email failed (registration status):', emailError)
+        // Don't fail the request; in-app notification already sent
+      }
     }
 
     return NextResponse.json({

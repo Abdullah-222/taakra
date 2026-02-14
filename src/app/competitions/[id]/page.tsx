@@ -2,7 +2,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { HomeFooter } from '@/components/home/HomeFooter'
-import { HomeNav } from '@/components/home/HomeNav'
 import { logActivity } from '@/lib/activity'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -72,8 +71,6 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: 'var(--background)' }}>
       <Snowfall />
-      <HomeNav />
-
       <main className="py-10 sm:py-12 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link
@@ -170,6 +167,24 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
                 >
                   {competition.description}
                 </p>
+
+                {/* Rules of competition */}
+                {competition.rules && competition.rules.trim() && (
+                  <div className="mb-6 pt-6 border-t" style={{ borderColor: 'var(--glass-border)' }}>
+                    <p
+                      className="text-xs uppercase tracking-wider mb-2"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      Rules of competition
+                    </p>
+                    <p
+                      className="text-sm leading-relaxed whitespace-pre-line"
+                      style={{ color: 'var(--color-text-secondary)' }}
+                    >
+                      {competition.rules}
+                    </p>
+                  </div>
+                )}
 
                 {/* Tags */}
                 {competition.tags && competition.tags.length > 0 && (

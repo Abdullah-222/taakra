@@ -133,6 +133,7 @@ model Competition {
   id              Int       @id @default(autoincrement())
   title           String
   description     String
+  rules           String?   // Rules of competition (paragraph, optional)
   category        String    // e.g., "Technology", "Design", "Business", etc.
   subcategory     String?    // Subcategory within the main category
   deadline        DateTime

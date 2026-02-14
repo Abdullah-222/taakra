@@ -4,7 +4,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { HomeFooter } from '@/components/home/HomeFooter'
-import { HomeNav } from '@/components/home/HomeNav'
 
 type Property = {
   id: number
@@ -61,8 +60,6 @@ export default function PropertiesPage() {
 
   return (
     <div className="page-shell min-h-screen">
-      <HomeNav />
-
       <main className="py-10 sm:py-12">
         <div className="content-wrap">
           <header className="mb-8 sm:mb-10">

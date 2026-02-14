@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { HomeNav } from '@/components/home/HomeNav'
 import { HomeFooter } from '@/components/home/HomeFooter'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from '@/components/ui/ToasterProvider'
@@ -166,7 +165,6 @@ export default function CommunityChatPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-stone-50 dark:bg-gray-900 flex flex-col">
-        <HomeNav />
         <main className="flex-1 flex items-center justify-center">
           <span className="text-stone-500">Loading...</span>
         </main>
@@ -177,8 +175,6 @@ export default function CommunityChatPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-50 to-emerald-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-emerald-950/20 flex flex-col">
-      <HomeNav />
-
       <main className="flex-1 flex flex-col max-w-5xl mx-auto w-full px-4 sm:px-6 py-6">
         <div className="flex items-center justify-between mb-6 gap-4">
           <div className="min-w-0">

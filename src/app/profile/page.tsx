@@ -4,10 +4,10 @@ import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { HomeNav } from '@/components/home/HomeNav'
 import { HomeFooter } from '@/components/home/HomeFooter'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from '@/components/ui/ToasterProvider'
+import { theme } from '@/lib/theme'
 
 type User = { id: number; email: string; name: string | null; role: string; imageUrl?: string | null }
 
@@ -21,6 +21,23 @@ type NotificationItem = {
   userId?: number | null
   readAt?: string | null
   createdAt: string
+}
+
+type RegisteredCompetition = {
+  id: number
+  status: string
+  paymentStatus: string
+  createdAt: string
+  competition: {
+    id: number
+    title: string
+    description: string
+    category: string
+    deadline: string
+    prize: string
+    images: string[]
+    status: string
+  }
 }
 
 type TabType = 'profile' | 'notifications' | 'settings'
@@ -38,6 +55,8 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [loadingNotifications, setLoadingNotifications] = useState(false)
+  const [registrations, setRegistrations] = useState<RegisteredCompetition[]>([])
+  const [loadingRegistrations, setLoadingRegistrations] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !authUser) {
@@ -62,6 +81,16 @@ export default function ProfilePage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
+
+  useEffect(() => {
+    if (!authUser) return
+    setLoadingRegistrations(true)
+    fetch('/api/registrations')
+      .then((res) => res.json())
+      .then((data) => setRegistrations(data.registrations ?? []))
+      .catch(() => toast.error('Failed to load registrations'))
+      .finally(() => setLoadingRegistrations(false))
+  }, [authUser])
 
   async function loadNotifications() {
     setLoadingNotifications(true)
@@ -149,10 +178,20 @@ export default function ProfilePage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-stone-50 dark:bg-gray-900 flex flex-col">
-        <HomeNav />
-        <main className="flex-1 flex items-center justify-center">
-          <span className="text-stone-500">Loading...</span>
+      <div className="min-h-screen flex flex-col" style={{ background: 'var(--background)' }}>
+        <main className="flex-1 flex items-center justify-center py-20">
+          <div
+            className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl"
+            style={{
+              background: theme.glass.background,
+              border: theme.glass.border,
+              boxShadow: theme.glass.shadow,
+              color: theme.colors.textMuted,
+            }}
+          >
+            <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            Loading your profile...
+          </div>
         </main>
         <HomeFooter />
       </div>
@@ -164,35 +203,67 @@ export default function ProfilePage() {
   }
 
   const displayName = user.name?.trim() || user.email.split('@')[0] || 'User'
+  const unreadCount = notifications.filter((n) => !n.readAt).length
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-gray-900 flex flex-col">
-      <HomeNav />
-
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--background)' }}>
       <main className="flex-1 w-full">
-        {/* Hero section */}
-        <div className="bg-gradient-to-b from-emerald-600/10 to-transparent dark:from-emerald-800/20 dark:to-transparent border-b border-stone-200 dark:border-gray-800">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-            <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 sm:gap-8">
-              <div className="relative group">
-                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden bg-stone-200 dark:bg-gray-700 shadow-lg ring-2 ring-white dark:ring-gray-800 ring-offset-2 ring-offset-stone-50 dark:ring-offset-gray-900 shrink-0">
+        {/* Hero */}
+        <div
+          className="relative overflow-hidden border-b"
+          style={{
+            borderColor: 'var(--glass-border)',
+            background: 'linear-gradient(180deg, var(--color-frost-50) 0%, var(--background) 100%)',
+          }}
+        >
+          <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 20% 50%, var(--color-frost-300) 0%, transparent 50%)' }} />
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-sm font-medium mb-6 transition-colors hover:opacity-90"
+              style={{ color: theme.colors.textMuted }}
+            >
+              ← Back to home
+            </Link>
+            <div className="flex flex-col sm:flex-row items-center sm:items-end gap-8 sm:gap-10">
+              <div className="relative group shrink-0">
+                <div
+                  className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl overflow-hidden shadow-xl ring-4 ring-white/20 dark:ring-black/20"
+                  style={{
+                    boxShadow: theme.glass.shadow,
+                    background: theme.glass.background,
+                    border: theme.glass.border,
+                  }}
+                >
                   {user.imageUrl ? (
                     <Image
                       src={user.imageUrl}
                       alt={displayName}
-                      width={128}
-                      height={128}
+                      width={144}
+                      height={144}
                       className="w-full h-full object-cover"
                       unoptimized={user.imageUrl.includes('supabase')}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-emerald-600 dark:text-emerald-400 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/50 dark:to-emerald-800/50">
+                    <div
+                      className="w-full h-full flex items-center justify-center text-4xl sm:text-5xl font-bold"
+                      style={{
+                        color: theme.colors.glacier500,
+                        background: 'linear-gradient(135deg, var(--color-frost-100) 0%, var(--color-frost-200) 100%)',
+                      }}
+                    >
                       {displayName.charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>
-                <label className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                  <span className="text-white text-sm font-medium px-3 py-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                <label
+                  className="absolute inset-0 flex items-center justify-center rounded-3xl cursor-pointer transition-all opacity-0 group-hover:opacity-100"
+                  style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+                >
+                  <span
+                    className="text-white text-sm font-medium px-4 py-2 rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.2)' }}
+                  >
                     {uploading ? 'Uploading…' : 'Change photo'}
                   </span>
                   <input
@@ -206,69 +277,122 @@ export default function ProfilePage() {
                 </label>
               </div>
               <div className="text-center sm:text-left flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-white tracking-tight">
+                <h1
+                  className="text-2xl sm:text-4xl font-bold tracking-tight"
+                  style={{ color: theme.colors.textPrimary }}
+                >
                   {displayName}
                 </h1>
-                <p className="text-stone-500 dark:text-gray-400 mt-1">{user.email}</p>
-                <span className="inline-block mt-2 text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 capitalize">
-                  {user.role}
-                </span>
+                <p className="mt-1 text-sm sm:text-base" style={{ color: theme.colors.textSecondary }}>
+                  {user.email}
+                </p>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-4">
+                  <span
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
+                    style={{
+                      background: 'color-mix(in srgb, var(--color-glacier-500) 18%, transparent)',
+                      color: theme.colors.glacier500,
+                      border: theme.glass.border,
+                    }}
+                  >
+                    {user.role}
+                  </span>
+                  {registrations.length > 0 && (
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
+                      style={{ color: theme.colors.textSecondary, background: theme.glass.background, border: theme.glass.border }}
+                    >
+                      ❄️ {registrations.length} competition{registrations.length !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  {unreadCount > 0 && activeTab !== 'notifications' && (
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
+                      style={{ background: `${theme.colors.warning}22`, color: theme.colors.warning, border: `1px solid ${theme.colors.warning}` }}
+                    >
+                      {unreadCount} new notification{unreadCount !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
           {/* Tabs */}
-          <div className="flex gap-1 border-b border-stone-200 dark:border-gray-700 mb-6 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'profile'
-                  ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
-                  : 'text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white'
-              }`}
-            >
-              Profile
-            </button>
-            <button
-              onClick={() => setActiveTab('notifications')}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'notifications'
-                  ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
-                  : 'text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white'
-              }`}
-            >
-              Notifications
-            </button>
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
-                activeTab === 'settings'
-                  ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
-                  : 'text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white'
-              }`}
-            >
-              Settings
-            </button>
-          </div>
+          <nav
+            className="flex gap-1 p-1.5 rounded-2xl mb-8 overflow-x-auto"
+            style={{
+              background: theme.glass.background,
+              border: theme.glass.border,
+              boxShadow: theme.glass.shadow,
+            }}
+            aria-label="Profile sections"
+          >
+            {[
+              { id: 'profile' as TabType, label: 'Profile', icon: '👤' },
+              { id: 'notifications' as TabType, label: 'Notifications', icon: '🔔', badge: unreadCount > 0 ? unreadCount : null },
+              { id: 'settings' as TabType, label: 'Settings', icon: '⚙️' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                  activeTab === tab.id ? 'text-white' : ''
+                }`}
+                style={
+                  activeTab === tab.id
+                    ? {
+                        background: theme.buttons.primary.background,
+                        boxShadow: theme.buttons.primary.shadow,
+                      }
+                    : { color: theme.colors.textSecondary }
+                }
+              >
+                <span aria-hidden>{tab.icon}</span>
+                {tab.label}
+                {tab.badge != null && (
+                  <span
+                    className="min-w-[1.25rem] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-bold"
+                    style={{ background: 'rgba(255,255,255,0.3)', color: 'inherit' }}
+                  >
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
 
           {/* Profile Tab */}
           {activeTab === 'profile' && (
-            <section className="bg-white dark:bg-gray-800 rounded-2xl border border-stone-200 dark:border-gray-700 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-stone-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-stone-900 dark:text-white">
-                  Profile
-                </h2>
-                <p className="text-sm text-stone-500 dark:text-gray-400 mt-0.5">
-                  Your display name and account info
+            <section
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: theme.glass.background,
+                border: theme.glass.border,
+                boxShadow: theme.glass.shadow,
+              }}
+            >
+              <div
+                className="p-6 sm:p-8 border-b"
+                style={{ borderColor: 'var(--glass-border)' }}
+              >
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-2xl" aria-hidden>👤</span>
+                  <h2 className="text-xl font-bold" style={{ color: theme.colors.textPrimary }}>
+                    Account details
+                  </h2>
+                </div>
+                <p className="text-sm" style={{ color: theme.colors.textMuted }}>
+                  Your display name and email. Only you can see this.
                 </p>
               </div>
-              <div className="p-6">
+              <div className="p-6 sm:p-8">
                 {editing ? (
-                  <form onSubmit={handleSaveProfile} className="space-y-4">
+                  <form onSubmit={handleSaveProfile} className="space-y-5">
                     <div>
-                      <label className="block text-sm font-medium text-stone-700 dark:text-gray-300 mb-1.5">
+                      <label className="block text-sm font-semibold mb-2" style={{ color: theme.colors.textPrimary }}>
                         Display name
                       </label>
                       <input
@@ -276,17 +400,25 @@ export default function ProfilePage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Your name"
-                        className="w-full rounded-xl border border-stone-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-2.5 text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full px-4 py-3 rounded-xl text-sm transition-all focus:outline-none"
+                        style={{
+                          background: 'var(--input-bg)',
+                          border: 'var(--input-border)',
+                          color: 'var(--input-text)',
+                        }}
                       />
                     </div>
-
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                       <button
                         type="submit"
                         disabled={saving}
-                        className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium disabled:opacity-50 transition-colors"
+                        className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all hover:scale-[1.02]"
+                        style={{
+                          background: theme.buttons.primary.background,
+                          boxShadow: theme.buttons.primary.shadow,
+                        }}
                       >
-                        {saving ? 'Saving...' : 'Save'}
+                        {saving ? 'Saving...' : 'Save changes'}
                       </button>
                       <button
                         type="button"
@@ -294,24 +426,45 @@ export default function ProfilePage() {
                           setEditing(false)
                           setName(user.name ?? '')
                         }}
-                        className="px-4 py-2.5 rounded-xl border border-stone-300 dark:border-gray-600 text-stone-700 dark:text-gray-300 font-medium hover:bg-stone-50 dark:hover:bg-gray-700 transition-colors"
+                        className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
+                        style={{
+                          background: theme.glass.background,
+                          border: theme.glass.border,
+                          color: theme.colors.textPrimary,
+                        }}
                       >
                         Cancel
                       </button>
                     </div>
                   </form>
                 ) : (
-                  <div className="flex items-center justify-between flex-wrap gap-4">
-                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm min-w-0">
-                      <div>
-                        <dt className="text-stone-500 dark:text-gray-400">Name</dt>
-                        <dd className="font-medium text-stone-900 dark:text-white mt-0.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-6 min-w-0">
+                      <div
+                        className="p-4 rounded-xl"
+                        style={{
+                          background: 'rgba(255,255,255,0.04)',
+                          border: theme.glass.border,
+                        }}
+                      >
+                        <dt className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: theme.colors.textMuted }}>
+                          Name
+                        </dt>
+                        <dd className="font-semibold text-lg" style={{ color: theme.colors.textPrimary }}>
                           {displayName}
                         </dd>
                       </div>
-                      <div>
-                        <dt className="text-stone-500 dark:text-gray-400">Email</dt>
-                        <dd className="font-medium text-stone-900 dark:text-white mt-0.5 truncate">
+                      <div
+                        className="p-4 rounded-xl"
+                        style={{
+                          background: 'rgba(255,255,255,0.04)',
+                          border: theme.glass.border,
+                        }}
+                      >
+                        <dt className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: theme.colors.textMuted }}>
+                          Email
+                        </dt>
+                        <dd className="font-medium truncate" style={{ color: theme.colors.textPrimary }}>
                           {user.email}
                         </dd>
                       </div>
@@ -319,9 +472,14 @@ export default function ProfilePage() {
                     <button
                       type="button"
                       onClick={() => setEditing(true)}
-                      className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:underline shrink-0"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shrink-0 transition-all hover:scale-[1.02]"
+                      style={{
+                        background: theme.buttons.primary.background,
+                        color: theme.buttons.primary.color,
+                        boxShadow: theme.buttons.primary.shadow,
+                      }}
                     >
-                      Edit profile
+                      ✏️ Edit profile
                     </button>
                   </div>
                 )}
@@ -329,69 +487,273 @@ export default function ProfilePage() {
             </section>
           )}
 
+          {/* Registered Competitions - always visible when on profile tab */}
+          {activeTab === 'profile' && (
+            <section className="mt-8">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: theme.colors.textPrimary }}>
+                    <span className="text-2xl" aria-hidden>❄️</span>
+                    Your competition snowflakes
+                  </h2>
+                  <p className="text-sm mt-0.5" style={{ color: theme.colors.textMuted }}>
+                    Competitions you&apos;ve registered for — track status and deadlines
+                  </p>
+                </div>
+                {registrations.length > 0 && (
+                  <Link
+                    href="/registrations"
+                    className="text-sm font-semibold px-3 py-2 rounded-xl transition-all hover:scale-[1.02]"
+                    style={{
+                      color: theme.colors.glacier500,
+                      background: 'color-mix(in srgb, var(--color-glacier-500) 12%, transparent)',
+                      border: theme.glass.border,
+                    }}
+                  >
+                    View all →
+                  </Link>
+                )}
+              </div>
+
+              {loadingRegistrations ? (
+                <div
+                  className="rounded-2xl p-12 text-center"
+                  style={{
+                    background: theme.glass.background,
+                    border: theme.glass.border,
+                    boxShadow: theme.glass.shadow,
+                    color: theme.colors.textMuted,
+                  }}
+                >
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent mx-auto" aria-hidden />
+                  <p className="mt-3 text-sm">Loading your competitions...</p>
+                </div>
+              ) : registrations.length === 0 ? (
+                <div
+                  className="rounded-2xl p-10 text-center"
+                  style={{
+                    background: theme.glass.background,
+                    border: theme.glass.border,
+                    boxShadow: theme.glass.shadow,
+                  }}
+                >
+                  <span className="text-5xl block mb-3">🏔️</span>
+                  <p className="font-medium" style={{ color: theme.colors.textPrimary }}>No registrations yet</p>
+                  <p className="text-sm mt-1" style={{ color: theme.colors.textMuted }}>Register for competitions to see them here</p>
+                  <Link
+                    href="/competitions"
+                    className="inline-block mt-4 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:scale-[1.02] hover:shadow-lg"
+                    style={{
+                      background: theme.buttons.primary.background,
+                      boxShadow: theme.buttons.primary.shadow,
+                    }}
+                  >
+                    Browse competitions
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {registrations.map((reg) => {
+                    const comp = reg.competition
+                    const deadline = new Date(comp.deadline)
+                    const now = new Date()
+                    const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+                    const isExpired = daysLeft < 0
+                    const deadlineLabel = isExpired
+                      ? 'Ended'
+                      : daysLeft === 0
+                        ? 'Today'
+                        : daysLeft === 1
+                          ? 'Tomorrow'
+                          : `${daysLeft} days left`
+                    const img = comp.images?.[0]
+                    const regStatus = (reg.status || 'pending').toLowerCase()
+                    const payStatus = (reg.paymentStatus || 'pending').toLowerCase()
+                    const registrationLabel =
+                      regStatus === 'approved'
+                        ? 'Approved'
+                        : regStatus === 'rejected'
+                          ? 'Rejected by admin'
+                          : 'Pending'
+                    const paymentLabel =
+                      payStatus === 'approved'
+                        ? 'Payment approved'
+                        : payStatus === 'rejected'
+                          ? 'Payment rejected'
+                          : 'Payment pending'
+                    const registrationColor =
+                      regStatus === 'approved'
+                        ? theme.colors.success
+                        : regStatus === 'rejected'
+                          ? theme.colors.danger
+                          : theme.colors.warning
+                    const paymentColor =
+                      payStatus === 'approved'
+                        ? theme.colors.success
+                        : payStatus === 'rejected'
+                          ? theme.colors.danger
+                          : theme.colors.warning
+                    return (
+                      <Link
+                        key={reg.id}
+                        href={`/competitions/${comp.id}`}
+                        className="group block rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-glacier-500)]"
+                        style={{
+                          background: theme.glass.background,
+                          border: theme.glass.border,
+                          boxShadow: theme.glass.shadow,
+                        }}
+                      >
+                        <div className="relative h-36 overflow-hidden">
+                          {img ? (
+                            <Image
+                              src={img}
+                              alt=""
+                              fill
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            />
+                          ) : (
+                            <div
+                              className="w-full h-full flex items-center justify-center text-4xl"
+                              style={{ background: 'var(--color-frost-100)' }}
+                            >
+                              ❄️
+                            </div>
+                          )}
+                          <div
+                            className="absolute inset-0 opacity-70"
+                            style={{
+                              background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 55%)',
+                            }}
+                          />
+                          <div className="absolute bottom-2 left-2 right-2 flex flex-wrap items-center gap-1.5">
+                            <span
+                              className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-lg text-white"
+                              style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+                            >
+                              {comp.category}
+                            </span>
+                            <span
+                              className="text-[10px] font-medium px-2 py-1 rounded-lg shrink-0 text-white"
+                              style={{ background: registrationColor }}
+                              title="Registration status"
+                            >
+                              {registrationLabel}
+                            </span>
+                            <span
+                              className="text-[10px] font-medium px-2 py-1 rounded-lg shrink-0 text-white"
+                              style={{ background: paymentColor }}
+                              title="Payment status"
+                            >
+                              {paymentLabel}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <h3 className="font-semibold line-clamp-2 transition-colors" style={{ color: theme.colors.textPrimary }}>
+                            {comp.title}
+                          </h3>
+                          <p className="text-xs mt-1 line-clamp-1" style={{ color: theme.colors.textMuted }}>
+                            {comp.prize}
+                          </p>
+                          <p
+                            className="text-xs font-medium mt-2"
+                            style={{
+                              color: isExpired ? theme.colors.textMuted : theme.colors.glacier500,
+                            }}
+                          >
+                            {deadlineLabel}
+                            {!isExpired && <span className="font-normal opacity-80"> · {deadline.toLocaleDateString()}</span>}
+                          </p>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
+          )}
+
           {/* Notifications Tab */}
           {activeTab === 'notifications' && (
-            <section className="bg-white dark:bg-gray-800 rounded-2xl border border-stone-200 dark:border-gray-700 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-stone-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-stone-900 dark:text-white">
-                  All Notifications
-                </h2>
-                <p className="text-sm text-stone-500 dark:text-gray-400 mt-0.5">
-                  View all your notification history
+            <section
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: theme.glass.background,
+                border: theme.glass.border,
+                boxShadow: theme.glass.shadow,
+              }}
+            >
+              <div
+                className="p-6 sm:p-8 border-b"
+                style={{ borderColor: 'var(--glass-border)' }}
+              >
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-2xl" aria-hidden>🔔</span>
+                  <h2 className="text-xl font-bold" style={{ color: theme.colors.textPrimary }}>
+                    All notifications
+                  </h2>
+                </div>
+                <p className="text-sm mt-0.5" style={{ color: theme.colors.textMuted }}>
+                  View and manage your notification history
                 </p>
               </div>
-              <div className="divide-y divide-stone-200 dark:divide-gray-700">
+              <div className="divide-y" style={{ borderColor: 'var(--glass-border)' }}>
                 {loadingNotifications ? (
-                  <div className="p-8 text-center text-stone-500 dark:text-gray-400">
-                    Loading notifications...
+                  <div className="p-10 text-center" style={{ color: theme.colors.textMuted }}>
+                    <span className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />
+                    <p className="mt-3 text-sm">Loading notifications...</p>
                   </div>
                 ) : notifications.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <svg
-                      className="mx-auto h-12 w-12 text-stone-300 dark:text-gray-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 11-6 0h6z"
-                      />
-                    </svg>
-                    <p className="mt-4 text-stone-500 dark:text-gray-400">No notifications yet</p>
-                    <p className="mt-1 text-sm text-stone-400 dark:text-gray-500">
-                      When you receive notifications, they'll appear here
+                  <div className="p-10 text-center">
+                    <span className="text-5xl block mb-3" aria-hidden>🔔</span>
+                    <p className="font-medium" style={{ color: theme.colors.textPrimary }}>No notifications yet</p>
+                    <p className="text-sm mt-1" style={{ color: theme.colors.textMuted }}>
+                      When you receive notifications, they&apos;ll appear here
                     </p>
                   </div>
                 ) : (
                   notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-4 hover:bg-stone-50 dark:hover:bg-gray-700/50 transition-colors ${
-                        !notification.readAt ? 'bg-emerald-50/30 dark:bg-emerald-900/10' : ''
-                      }`}
+                      className="p-4 sm:p-5 transition-colors hover:opacity-95"
+                      style={{
+                        background: !notification.readAt
+                          ? 'color-mix(in srgb, var(--color-glacier-500) 8%, transparent)'
+                          : 'transparent',
+                      }}
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-medium text-stone-900 dark:text-white">
+                            <h3 className="font-semibold" style={{ color: theme.colors.textPrimary }}>
                               {notification.title}
                             </h3>
                             {!notification.readAt && (
-                              <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                              <span
+                                className="inline-flex h-2 w-2 rounded-full shrink-0"
+                                style={{ background: theme.colors.glacier500 }}
+                                aria-hidden
+                              />
                             )}
                             {notification.type && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-stone-100 dark:bg-gray-700 text-stone-600 dark:text-gray-300 capitalize">
+                              <span
+                                className="text-xs px-2.5 py-1 rounded-lg capitalize font-medium"
+                                style={{
+                                  background: theme.glass.background,
+                                  border: theme.glass.border,
+                                  color: theme.colors.textSecondary,
+                                }}
+                              >
                                 {notification.type.replace(/_/g, ' ')}
                               </span>
                             )}
                           </div>
-                          <p className="mt-1 text-sm text-stone-600 dark:text-gray-300">
+                          <p className="mt-1.5 text-sm" style={{ color: theme.colors.textSecondary }}>
                             {notification.message}
                           </p>
-                          <p className="mt-2 text-xs text-stone-400 dark:text-gray-500">
+                          <p className="mt-2 text-xs" style={{ color: theme.colors.textMuted }}>
                             {new Date(notification.createdAt).toLocaleString('en-US', {
                               dateStyle: 'medium',
                               timeStyle: 'short',
@@ -402,7 +764,8 @@ export default function ProfilePage() {
                           {!notification.readAt && (
                             <button
                               onClick={() => markAsRead(notification.id)}
-                              className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+                              className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90"
+                              style={{ color: theme.colors.glacier500, background: 'color-mix(in srgb, var(--color-glacier-500) 15%, transparent)' }}
                               title="Mark as read"
                             >
                               Mark read
@@ -410,7 +773,8 @@ export default function ProfilePage() {
                           )}
                           <button
                             onClick={() => deleteNotification(notification.id)}
-                            className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                            className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90"
+                            style={{ color: theme.colors.danger }}
                             title="Delete notification"
                           >
                             Delete
@@ -426,51 +790,74 @@ export default function ProfilePage() {
 
           {/* Settings Tab */}
           {activeTab === 'settings' && (
-            <section className="bg-white dark:bg-gray-800 rounded-2xl border border-stone-200 dark:border-gray-700 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-stone-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-stone-900 dark:text-white">
-                  Settings
-                </h2>
-                <p className="text-sm text-stone-500 dark:text-gray-400 mt-0.5">
-                  Preferences and account settings
+            <section
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: theme.glass.background,
+                border: theme.glass.border,
+                boxShadow: theme.glass.shadow,
+              }}
+            >
+              <div
+                className="p-6 sm:p-8 border-b"
+                style={{ borderColor: 'var(--glass-border)' }}
+              >
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-2xl" aria-hidden>⚙️</span>
+                  <h2 className="text-xl font-bold" style={{ color: theme.colors.textPrimary }}>
+                    Settings
+                  </h2>
+                </div>
+                <p className="text-sm mt-0.5" style={{ color: theme.colors.textMuted }}>
+                  Preferences and account security
                 </p>
               </div>
-              <div className="divide-y divide-stone-200 dark:divide-gray-700">
-                <div className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="font-medium text-stone-900 dark:text-white">Notifications</p>
-                    <p className="text-sm text-stone-500 dark:text-gray-400">Email and push</p>
+              <div className="divide-y" style={{ borderColor: 'var(--glass-border)' }}>
+                {[
+                  { title: 'Notifications', desc: 'Email and push', icon: '🔔' },
+                  { title: 'Privacy', desc: 'Profile visibility', icon: '👁️' },
+                  { title: 'Security', desc: 'Password & 2FA', icon: '🔒' },
+                ].map((item) => (
+                  <div
+                    key={item.title}
+                    className="flex items-center justify-between p-4 sm:p-5 gap-4"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-xl shrink-0" aria-hidden>{item.icon}</span>
+                      <div>
+                        <p className="font-semibold" style={{ color: theme.colors.textPrimary }}>
+                          {item.title}
+                        </p>
+                        <p className="text-sm mt-0.5" style={{ color: theme.colors.textMuted }}>
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className="text-xs font-medium px-3 py-1.5 rounded-xl shrink-0"
+                      style={{
+                        background: theme.glass.background,
+                        border: theme.glass.border,
+                        color: theme.colors.textMuted,
+                      }}
+                    >
+                      Coming soon
+                    </span>
                   </div>
-                  <span className="text-xs text-stone-400 dark:text-gray-500 px-2 py-1 rounded-full bg-stone-100 dark:bg-gray-700">
-                    Coming soon
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="font-medium text-stone-900 dark:text-white">Privacy</p>
-                    <p className="text-sm text-stone-500 dark:text-gray-400">Profile visibility</p>
-                  </div>
-                  <span className="text-xs text-stone-400 dark:text-gray-500 px-2 py-1 rounded-full bg-stone-100 dark:bg-gray-700">
-                    Coming soon
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="font-medium text-stone-900 dark:text-white">Security</p>
-                    <p className="text-sm text-stone-500 dark:text-gray-400">Password & 2FA</p>
-                  </div>
-                  <span className="text-xs text-stone-400 dark:text-gray-500 px-2 py-1 rounded-full bg-stone-100 dark:bg-gray-700">
-                    Coming soon
-                  </span>
-                </div>
+                ))}
               </div>
             </section>
           )}
 
-          <div className="mt-8 flex justify-center">
+          <div className="mt-10 flex justify-center">
             <Link
               href="/"
-              className="text-sm font-medium text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-[1.02]"
+              style={{
+                background: theme.glass.background,
+                border: theme.glass.border,
+                color: theme.colors.textSecondary,
+              }}
             >
               ← Back to home
             </Link>

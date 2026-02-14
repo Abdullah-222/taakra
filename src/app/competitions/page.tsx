@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { HomeFooter } from '@/components/home/HomeFooter'
-import { HomeNav } from '@/components/home/HomeNav'
 import { theme } from '../../../theme'
 import { Snowfall } from '@/components/ui/Snowfall'
 
@@ -101,8 +100,6 @@ export default function CompetitionsPage() {
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: 'var(--background)' }}>
       <Snowfall />
-      <HomeNav />
-
       <main className="py-10 sm:py-12 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
