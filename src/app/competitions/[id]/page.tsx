@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import dynamic from 'next/dynamic'
 import { HomeFooter } from '@/components/home/HomeFooter'
 import { logActivity } from '@/lib/activity'
 import { getCurrentUser } from '@/lib/auth'
@@ -13,19 +12,7 @@ import { Snowfall } from '@/components/ui/Snowfall'
 import { CompetitionRegistrationForm } from './CompetitionRegistrationForm'
 import { RuleSimplifier } from '@/components/ai/RuleSimplifier'
 import { PrepGuide } from '@/components/ai/PrepGuide'
-
-// Lazy load CompetitionChat - it's heavy with socket.io
-const CompetitionChat = dynamic(
-  () => import('./CompetitionChat').then((mod) => ({ default: mod.CompetitionChat })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="p-4 text-center text-sm" style={{ color: 'var(--color-text-muted)' }}>
-        Loading chat...
-      </div>
-    ),
-  }
-)
+import { CompetitionChatWrapper } from './CompetitionChatWrapper'
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -319,7 +306,7 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
                 currentUser={currentUser}
                 registrationFee={Number(process.env.NEXT_PUBLIC_STRIPE_REGISTRATION_FEE) || 0}
               />
-              <CompetitionChat
+              <CompetitionChatWrapper
                 competitionId={competition.id}
                 competitionTitle={competition.title}
                 currentUser={currentUser ? { id: currentUser.id, email: currentUser.email, name: currentUser.name } : null}

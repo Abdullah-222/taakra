@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { HomeFooter } from '@/components/home/HomeFooter'
 import { theme } from '@/lib/theme'
@@ -32,7 +32,7 @@ type Registration = {
   }
 }
 
-export default function RegistrationsPage() {
+function RegistrationsContent() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -659,3 +659,18 @@ export default function RegistrationsPage() {
   )
 }
 
+export default function RegistrationsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen relative" style={{ backgroundColor: 'var(--background)' }}>
+        <Snowfall />
+        <main className="py-10 sm:py-12 relative z-10 flex items-center justify-center">
+          <p style={{ color: 'var(--color-text-muted)' }}>Loading...</p>
+        </main>
+        <HomeFooter />
+      </div>
+    }>
+      <RegistrationsContent />
+    </Suspense>
+  )
+}

@@ -247,7 +247,6 @@ function PaymentDetailModal({ registration, onClose, onVerify }: PaymentDetailMo
                     }`}
                     style={{
                       borderColor: selectedImageIndex === idx ? 'var(--color-glacier-500)' : 'var(--glass-border)',
-                      ringColor: 'var(--color-glacier-500)',
                     }}
                   >
                     {/\.(jpg|jpeg|png|gif|webp)$/i.test(url) ? (
