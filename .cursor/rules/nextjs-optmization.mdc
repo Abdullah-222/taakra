@@ -1,0 +1,20 @@
+---
+alwaysApply: true
+---
+
+Use this compact version for project-level enforcement:
+
+Rendering Strategy
+Prefer SSR by default for data fetching, SEO, and performance. Use CSR only when necessary (interactive state, browser APIs, real-time features). When CSR is used, maximize its value by batching or consolidating data fetching efficiently instead of making excessive small requests. Apply this rule pragmatically, not dogmatically.
+
+Client Optimization
+For CSR components, fetch data efficiently, cache where appropriate, and revalidate intelligently after mutations. Avoid redundant refetching. When data changes, update state efficiently and trigger only necessary re-fetch operations.
+
+Optimistic UI
+Implement optimistic UI updates where safe. Immediately reflect expected changes in the UI, then reconcile with server response. Roll back gracefully on failure with clear feedback.
+
+UI & Layout Standards
+Follow professional UI practices: clean structure, proper spacing, centered primary elements where appropriate, consistent alignment, and responsive design. Avoid clutter and visual imbalance.
+
+Error Handling & UX Feedback
+Handle all async operations properly. Show loading states, meaningful error messages, and success feedback using inline messages or toasts. Never allow silent failures. Ensure users always understand what is happening.

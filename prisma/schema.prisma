@@ -1,0 +1,178 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  name      String?
+  password  String
+  role      String     @default("user") // "user" | "admin"
+  imageUrl  String?    // profile avatar URL (Supabase storage)
+  snowPoints Int       @default(0) // Snow points earned by user
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  properties Property[]
+  activities ActivityLog[]
+  approvedMeetings MeetingRequest[]
+  chatMessages ChatMessage[]
+
+  notifications Notification[]
+  competitions Competition[]
+  registrations CompetitionRegistration[]
+}
+
+model Property {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  price       String
+  location    String    // Display location string (e.g., "Bandra West, Mumbai")
+  latitude    Float?    // Map latitude
+  longitude   Float?    // Map longitude
+  address     String?   // Full address
+  city        String?   // City name
+  state       String?   // State/Province
+  country     String?   // Country
+  zipCode     String?   // Postal/ZIP code
+  images      String[]
+  videos      String[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  createdById Int?
+  createdBy   User?     @relation(fields: [createdById], references: [id])
+  meetingRequests MeetingRequest[]
+
+  @@index([latitude, longitude])
+  @@index([city])
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  action    String   // "property_created", "property_viewed", "user_registered", "user_logged_in", etc.
+  entityType String? // "property", "user", "system"
+  entityId  Int?     // ID of the related entity
+  userId    Int?     // User who performed the action
+  user      User?    @relation(fields: [userId], references: [id])
+  metadata  String?  @default("{}") // JSON string for additional data
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+  @@index([userId])
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  title      String
+  message    String
+  type       String?  // "user_registered", "meeting_request", etc.
+  entityType String?
+  entityId   Int?
+  userId     Int?
+  user       User?    @relation(fields: [userId], references: [id])
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([readAt])
+  @@index([createdAt])
+}
+
+model MeetingRequest {
+  id          Int       @id @default(autoincrement())
+  propertyId  Int
+  property    Property  @relation(fields: [propertyId], references: [id])
+  email       String
+  name        String?
+  message     String?
+  status      String    @default("pending") // "pending" | "approved" | "rejected"
+  roomId      String?   // 100ms room ID
+  roomCode    String?   // Room code for joining
+  roomUrl     String?   // Full room URL
+  approvedById Int?
+  approvedBy  User?     @relation(fields: [approvedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+  @@index([propertyId])
+  @@index([createdAt])
+}
+
+// Single community room: top-level messages have parentId null; replies have parentId set
+model ChatMessage {
+  id         Int          @id @default(autoincrement())
+  content    String
+  authorId   Int
+  author     User         @relation(fields: [authorId], references: [id])
+  parentId   Int?         // null = top-level message; set = reply to that message
+  parent     ChatMessage? @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    ChatMessage[] @relation("Replies")
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([parentId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model Competition {
+  id              Int       @id @default(autoincrement())
+  title           String
+  description     String
+  category        String    // e.g., "Technology", "Design", "Business", etc.
+  subcategory     String?    // Subcategory within the main category
+  deadline        DateTime
+  prize           String    // Prize description or amount
+  tags            String[]  // Array of tags
+  images          String[]  // Array of image URLs
+  videos          String[]  // Array of video URLs
+  status          String    @default("draft") // "draft" | "published" | "closed"
+  registrationCount Int     @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  createdById     Int?
+  createdBy        User?    @relation(fields: [createdById], references: [id])
+  registrations   CompetitionRegistration[]
+
+  @@index([category])
+  @@index([subcategory])
+  @@index([status])
+  @@index([deadline])
+  @@index([createdAt])
+}
+
+model CompetitionRegistration {
+  id            Int       @id @default(autoincrement())
+  competitionId Int
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status        String    @default("pending") // "pending" | "approved" | "rejected"
+  transactionId String?   // Transaction ID entered by user during registration
+  paymentStatus String    @default("pending") // "pending" | "approved" | "rejected"
+  paymentSlipUrls String[] // Array of payment slip URLs
+  rejectionReason String? // Reason for payment rejection
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([competitionId, userId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([competitionId])
+  @@index([userId])
+}

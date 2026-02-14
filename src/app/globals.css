@@ -1,0 +1,248 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* --- Winter Morning (Light Mode) --- */
+    --color-snow-white: #ffffff;
+    --color-off-white: #f6f9fc;
+    
+    --color-frost-50: #f0f7ff;
+    --color-frost-100: #e0f0ff;
+    --color-frost-200: #bae0ff;
+    --color-frost-300: #7cc4fa;
+    --color-frost-400: #369eff;
+
+    --color-glacier-500: #007aff;
+    --color-glacier-600: #0062cc;
+    
+    --color-text-primary: #1e293b;
+    --color-text-secondary: #475569;
+    --color-text-muted: #94a3b8;
+    --color-text-inverse: #ffffff;
+
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.9);
+    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    --glass-blur: blur(20px) saturate(180%);
+
+    --input-bg: rgba(255, 255, 255, 0.6);
+    --input-border: rgba(200, 220, 255, 0.5);
+    --input-text: #1e293b;
+
+    /* Base Tailwind mappings */
+    --background: #f3f5f7;
+    --foreground: #121821;
+    --surface: #ffffff;
+    --surface-muted: #edf1f5;
+    --border: #d6dde6;
+    --muted: #5a6472;
+    --accent: #0f766e;
+    --accent-strong: #0b5d56;
+    --ring: rgba(15, 118, 110, 0.28);
+  }
+
+  .dark {
+    /* --- Midnight Blizzard (Dark Mode) --- */
+    --color-snow-white: #0f172a; /* Slate 900 */
+    --color-off-white: #1e293b;   /* Slate 800 */
+    
+    --color-frost-50: #1e293b;
+    --color-frost-100: #0f172a;
+    --color-frost-200: #1e293b;
+    --color-frost-300: #38bdf8;   /* Sky 400 - glowing ice */
+    --color-frost-400: #0ea5e9;   /* Sky 500 */
+
+    --color-glacier-500: #3b82f6; /* Blue 500 */
+    --color-glacier-600: #60a5fa; /* Blue 400 (lighter for dark mode readability) */
+    
+    --color-text-primary: #f8fafc; /* Slate 50 */
+    --color-text-secondary: #cbd5e1; /* Slate 300 */
+    --color-text-muted: #94a3b8;   /* Slate 400 */
+    --color-text-inverse: #0f172a;
+
+    --glass-bg: rgba(15, 23, 42, 0.65); /* Dark blue/slate glass */
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --glass-blur: blur(20px) saturate(180%);
+
+    --input-bg: rgba(30, 41, 59, 0.5);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --input-text: #f8fafc;
+
+    /* Base Tailwind mappings */
+    --background: #0f141b;
+    --foreground: #e9edf2;
+    --surface: #151c25;
+    --surface-muted: #1b2430;
+    --border: #283342;
+    --muted: #99a5b6;
+    --accent: #4fd1c5;
+    --accent-strong: #3ab4a9;
+    --ring: rgba(79, 209, 197, 0.24);
+  }
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-manrope), "Manrope", "Inter", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+a {
+  color: inherit;
+}
+
+.page-shell {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.content-wrap {
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .content-wrap {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-wrap {
+    padding-inline: 2rem;
+  }
+}
+
+.surface-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.surface-muted {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.section-title {
+  font-size: clamp(1.75rem, 1.1rem + 1.5vw, 2.625rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+.section-copy {
+  color: var(--muted);
+  max-width: 46ch;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.btn-primary:hover {
+  background: var(--accent-strong);
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.input-clean:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  font-weight: 600;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-muted);
+}
+
+.input-clean {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.input-clean::placeholder {
+  color: var(--muted);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+}
+
+.divider {
+  height: 1px;
+  width: 100%;
+  background: var(--border);
+}
+
+/* --- Winter Theme Animations --- */
+@keyframes snowflake-float {
+  0% { transform: translateY(0px) translateX(0px); opacity: 0; }
+  20% { opacity: 0.8; }
+  100% { transform: translateY(100vh) translateX(20px); opacity: 0; }
+}
+
+.snowflake {
+  position: absolute;
+  top: -10px;
+  border-radius: 50%;
+  background: white;
+  opacity: 0.8;
+  pointer-events: none;
+  animation: snowflake-float linear infinite;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
