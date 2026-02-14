@@ -94,7 +94,9 @@ export default function AdminLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-[1.02]"
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-[1.02] ${
+                  !isActive ? 'hover:bg-[rgba(255,255,255,0.05)]' : ''
+                }`}
                 style={{
                   background: isActive
                     ? 'rgba(16, 185, 129, 0.15)'
@@ -103,16 +105,6 @@ export default function AdminLayout({
                     ? theme.colors.success
                     : theme.colors.textSecondary,
                   border: isActive ? `1px solid ${theme.colors.success}40` : '1px solid transparent',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'transparent'
-                  }
                 }}
               >
                 <span className="text-lg">{item.icon}</span>
@@ -136,15 +128,9 @@ export default function AdminLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-[1.02]"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-[1.02] hover:bg-[rgba(255,255,255,0.05)]"
                 style={{
                   color: theme.colors.textSecondary,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent'
                 }}
               >
                 <span className="text-lg">{item.icon}</span>
@@ -168,17 +154,11 @@ export default function AdminLayout({
           <div className="flex gap-2">
             <Link
               href="/"
-              className="flex-1 text-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-[1.02]"
+              className="flex-1 text-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] hover:bg-[rgba(255,255,255,0.05)]"
               style={{
                 color: theme.colors.textSecondary,
                 background: 'transparent',
                 border: theme.glass.border,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
               }}
             >
               Site
