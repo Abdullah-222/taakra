@@ -29,9 +29,9 @@ export function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 mx-2 mt-2 sm:mx-4 sm:mt-4 flex flex-col gap-0 rounded-xl sm:rounded-2xl transition-all duration-300 overflow-hidden" style={{ boxShadow: theme.glass.shadow }}>
+    <header className="fixed top-0 left-0 right-0 z-50 mx-2 mt-2 sm:mx-4 sm:mt-4 flex flex-col gap-0 rounded-xl sm:rounded-2xl transition-all duration-300" style={{ boxShadow: theme.glass.shadow }}>
       <nav
-        className="flex items-center justify-between gap-2 px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl min-h-0"
+        className="flex items-center justify-between gap-2 px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl min-h-0 overflow-visible"
         style={{
           background: theme.glass.background,
           backdropFilter: theme.glass.blur,

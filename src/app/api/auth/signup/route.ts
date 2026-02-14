@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, setAuthCookie } from '@/lib/auth'
-import { logActivity } from '@/lib/activity'
+import { logActivity, notifyUser } from '@/lib/activity'
 
 export async function POST(request: NextRequest) {
   try {
@@ -81,13 +81,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Log activity
+    // Log activity (notifies admins)
     await logActivity({
       action: 'user_registered',
       entityType: 'user',
       entityId: user.id,
       userId: user.id,
       metadata: { email: user.email, role: user.role },
+    })
+
+    // Welcome notification for the new user so the notification dropdown shows something
+    await notifyUser({
+      userId: user.id,
+      title: 'Welcome!',
+      message: 'Your account was created successfully. You can now browse competitions and join the community.',
+      type: 'user_registered',
+      entityType: 'user',
+      entityId: user.id,
     })
 
     return NextResponse.json(
