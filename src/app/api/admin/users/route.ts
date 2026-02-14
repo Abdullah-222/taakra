@@ -15,6 +15,14 @@ function generatePassword(length = 12): string {
   return result
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
 export async function GET() {
   const admin = await requireAdmin()
   if (!admin) {
@@ -84,19 +92,32 @@ export async function POST(request: NextRequest) {
       throw e // Re-throw other errors
     }
 
-    // Send email - if this fails, rollback user creation
+    // Send email - if this fails, rollback user creation (Taakra-themed)
     const from = process.env.RESEND_FROM_EMAIL || 'onboarding@zalnex.me'
+    const displayName = (typeof name === 'string' && name.trim()) ? escapeHtml(name.trim()) : 'there'
     const { error } = await resend.emails.send({
       from,
       to: trimmedEmail,
-      subject: 'Your EstatePro account credentials',
+      subject: 'Your Taakra account is ready',
       html: `
-        <h2>Your EstatePro account has been created</h2>
-        <p>An administrator has created an account for you. Use the credentials below to sign in.</p>
-        <p><strong>Email:</strong> ${trimmedEmail}</p>
-        <p><strong>Password:</strong> <code style="background:#f0f0f0;padding:4px 8px;border-radius:4px;">${password}</code></p>
-        <p>Please sign in at your app login page and change your password if desired.</p>
-        <p>— EstatePro Team</p>
+        <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 560px; margin: 0 auto; background: #f6f9fc; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);">
+          <div style="background: linear-gradient(135deg, #007aff 0%, #0062cc 100%); padding: 28px 32px; text-align: center;">
+            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.02em;">❄️ Taakra</h1>
+            <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">Your account has been created</p>
+          </div>
+          <div style="padding: 32px;">
+            <p style="margin: 0 0 16px; color: #1e293b; font-size: 16px;">Hi ${displayName},</p>
+            <p style="margin: 0 0 24px; color: #475569; font-size: 15px; line-height: 1.5;">An administrator has created a Taakra account for you. Use the credentials below to sign in.</p>
+            <div style="background: rgba(0, 122, 255, 0.08); border: 1px solid rgba(0, 122, 255, 0.2); border-radius: 16px; padding: 20px; margin-bottom: 24px;">
+              <p style="margin: 0 0 8px; font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Email</p>
+              <p style="margin: 0 0 16px; font-size: 15px; color: #1e293b; font-weight: 500;">${escapeHtml(trimmedEmail)}</p>
+              <p style="margin: 0 0 8px; font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Temporary password</p>
+              <p style="margin: 0; font-size: 15px; color: #1e293b;"><code style="background: rgba(255,255,255,0.8); padding: 8px 12px; border-radius: 8px; font-family: ui-monospace, monospace; font-weight: 500;">${password}</code></p>
+            </div>
+            <p style="margin: 0 0 24px; color: #475569; font-size: 14px; line-height: 1.5;">Sign in at your app login page and change your password after your first login if you’d like.</p>
+            <p style="margin: 0; color: #94a3b8; font-size: 13px;">— Taakra Team</p>
+          </div>
+        </div>
       `,
     })
 

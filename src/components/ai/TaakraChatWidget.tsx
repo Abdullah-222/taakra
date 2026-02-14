@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { theme } from '../../../theme'
-import { X, Send, MessageCircle, Loader2 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { theme } from '@/lib/theme'
+import { X, Send, Loader2 } from 'lucide-react'
 
 interface Message {
   id: string
@@ -17,7 +19,7 @@ export function TaakraChatWidget() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
-      text: "Hello! I'm ❄️ Taakra Snow Assistant. How can I help you today?",
+      text: "Hi! I'm the **Taakra Snow Assistant** ❄️ — here to help with competitions, registration, and anything on the platform. What would you like to know?",
       isUser: false,
       timestamp: new Date(),
     },
@@ -25,14 +27,12 @@ export function TaakraChatWidget() {
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
 
-  // Focus input when chat opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus()
@@ -57,9 +57,7 @@ export function TaakraChatWidget() {
     try {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: messageText }),
       })
 
@@ -87,8 +85,7 @@ export function TaakraChatWidget() {
           },
         ])
       }
-    } catch (error) {
-      console.error('Error sending message:', error)
+    } catch {
       setMessages((prev) => [
         ...prev,
         {
@@ -103,7 +100,7 @@ export function TaakraChatWidget() {
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
@@ -112,105 +109,146 @@ export function TaakraChatWidget() {
 
   return (
     <>
-      {/* Chat Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-16 h-16 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+          className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-2xl shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
           style={{
             background: theme.buttons.primary.background,
-            boxShadow: `0 4px 20px ${theme.glow.ice}`,
+            boxShadow: theme.buttons.primary.shadow,
           }}
-          aria-label="Open Taakra Snow Assistant"
+          aria-label="Open Taakra Assistant"
         >
-          <MessageCircle className="w-6 h-6 text-white" />
+          <span className="text-2xl">❄️</span>
         </button>
       )}
 
-      {/* Chat Window */}
       {isOpen && (
         <div
-          className="fixed bottom-6 right-6 z-50 w-96 h-[600px] rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+          className="fixed bottom-6 right-6 z-50 w-[380px] sm:w-[420px] h-[520px] sm:h-[580px] rounded-2xl flex flex-col overflow-hidden"
           style={{
             background: theme.glass.background,
             border: theme.glass.border,
-            backdropFilter: theme.glass.blur,
             boxShadow: theme.glass.shadow,
+            backdropFilter: theme.glass.blur,
           }}
         >
-          {/* Header */}
           <div
-            className="flex items-center justify-between p-4 border-b"
-            style={{ borderColor: theme.glass.border }}
+            className="flex items-center justify-between shrink-0 px-4 py-3 border-b"
+            style={{ borderColor: 'var(--glass-border)' }}
           >
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: theme.buttons.primary.background }}>
-                <span className="text-white text-sm">❄️</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg"
+                style={{
+                  background: theme.buttons.primary.background,
+                  boxShadow: theme.buttons.primary.shadow,
+                }}
+              >
+                ❄️
               </div>
-              <div>
-                <h3 className="font-semibold" style={{ color: theme.colors.textPrimary }}>
-                  Taakra Snow Assistant
+              <div className="min-w-0">
+                <h3 className="font-semibold truncate" style={{ color: theme.colors.textPrimary }}>
+                  Taakra Assistant
                 </h3>
-                <p className="text-xs" style={{ color: theme.colors.textMuted }}>
-                  Ready
+                <p className="text-xs truncate" style={{ color: theme.colors.textMuted }}>
+                  Competitions & events
                 </p>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+              className="p-2 rounded-xl hover:opacity-80 transition-opacity shrink-0"
+              style={{ color: theme.colors.textMuted }}
               aria-label="Close chat"
             >
-              <X className="w-5 h-5" style={{ color: theme.colors.textMuted }} />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                    message.isUser
-                      ? 'rounded-br-sm'
-                      : 'rounded-bl-sm'
+                  className={`max-w-[92%] rounded-2xl px-4 py-3 ${
+                    message.isUser ? 'rounded-br-md' : 'rounded-bl-md'
                   }`}
                   style={{
                     background: message.isUser
                       ? theme.buttons.primary.background
-                      : theme.glass.background,
+                      : 'rgba(255,255,255,0.06)',
                     border: message.isUser ? 'none' : theme.glass.border,
                     color: message.isUser ? '#fff' : theme.colors.textPrimary,
                   }}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                  {message.cached && (
-                    <p className="text-xs mt-1 opacity-60">Cached response</p>
+                  {message.isUser ? (
+                    <p className="text-sm whitespace-pre-wrap break-words">{message.text}</p>
+                  ) : (
+                    <div className="chat-markdown text-sm">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          p: ({ children }) => <p className="my-1.5 first:mt-0 last:mb-0">{children}</p>,
+                          ul: ({ children }) => <ul className="my-1.5 pl-4 list-disc space-y-0.5">{children}</ul>,
+                          ol: ({ children }) => <ol className="my-1.5 pl-4 list-decimal space-y-0.5">{children}</ol>,
+                          li: ({ children }) => <li className="my-0">{children}</li>,
+                          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                          code: ({ children }) => (
+                            <code
+                              className="px-1.5 py-0.5 rounded text-[0.8em] bg-black/15 dark:bg-white/15"
+                              style={{ color: 'inherit' }}
+                            >
+                              {children}
+                            </code>
+                          ),
+                          a: ({ href, children }) => (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline opacity-90 hover:opacity-100"
+                              style={{ color: 'inherit' }}
+                            >
+                              {children}
+                            </a>
+                          ),
+                        }}
+                      >
+                        {message.text}
+                      </ReactMarkdown>
+                    </div>
                   )}
-                  <p className="text-xs mt-1 opacity-60">
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    {message.cached && (
+                      <span className="text-[10px] opacity-60">Cached</span>
+                    )}
+                    <span
+                      className="text-[10px] opacity-60"
+                      style={{ color: 'inherit' }}
+                    >
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
 
-            {/* Typing Indicator */}
             {isTyping && (
               <div className="flex justify-start">
                 <div
-                  className="rounded-2xl rounded-bl-sm px-4 py-2"
+                  className="rounded-2xl rounded-bl-md px-4 py-3"
                   style={{
-                    background: theme.glass.background,
+                    background: 'rgba(255,255,255,0.06)',
                     border: theme.glass.border,
                   }}
                 >
-                  <div className="flex gap-1">
+                  <div className="flex gap-1.5">
                     <div
                       className="w-2 h-2 rounded-full animate-bounce"
                       style={{ background: theme.colors.textMuted }}
@@ -237,37 +275,37 @@ export function TaakraChatWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
           <div
-            className="p-4 border-t"
-            style={{ borderColor: theme.glass.border }}
+            className="shrink-0 p-3 pt-2 border-t"
+            style={{ borderColor: 'var(--glass-border)' }}
           >
-            <div className="flex gap-2">
-              <input
+            <div className="flex gap-2 items-end">
+              <textarea
                 ref={inputRef}
-                type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                onKeyDown={handleKeyDown}
+                placeholder="Ask about competitions, registration..."
                 disabled={isTyping}
-                className="flex-1 px-4 py-2 rounded-lg text-sm outline-none transition-all"
+                rows={1}
+                className="flex-1 min-h-[40px] max-h-24 py-2.5 px-4 rounded-xl text-sm resize-none outline-none transition-all"
                 style={{
-                  background: theme.inputs.background,
-                  border: theme.inputs.border,
-                  borderRadius: theme.inputs.radius,
-                  color: theme.colors.textPrimary,
+                  background: 'var(--input-bg)',
+                  border: 'var(--input-border)',
+                  color: 'var(--input-text)',
                 }}
               />
               <button
+                type="button"
                 onClick={handleSend}
                 disabled={!input.trim() || isTyping}
-                className="p-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{
                   background: theme.buttons.primary.background,
                   color: theme.buttons.primary.color,
+                  boxShadow: theme.buttons.primary.shadow,
                 }}
-                aria-label="Send message"
+                aria-label="Send"
               >
                 {isTyping ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -276,8 +314,8 @@ export function TaakraChatWidget() {
                 )}
               </button>
             </div>
-            <p className="text-xs mt-2 text-center" style={{ color: theme.colors.textMuted }}>
-              Ask about competitions, registration, deadlines, and more
+            <p className="text-[10px] mt-1.5 text-center" style={{ color: theme.colors.textMuted }}>
+              Replies may include **markdown**. Shift+Enter for new line.
             </p>
           </div>
         </div>
