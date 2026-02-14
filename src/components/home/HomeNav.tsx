@@ -18,13 +18,13 @@ export function HomeNav() {
       <div className="content-wrap">
         <div className="flex h-16 items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[color:var(--surface-muted)] text-xs font-bold tracking-[0.14em]">
-              EP
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[color:var(--surface-muted)] text-lg">
+              ❄️
             </span>
             <div>
-              <p className="text-sm font-semibold tracking-tight">EstatePro</p>
+              <p className="text-sm font-semibold tracking-tight">Taakra</p>
               <p className="text-[10px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                Real Estate Platform
+                Snowy Competition Platform
               </p>
             </div>
           </Link>

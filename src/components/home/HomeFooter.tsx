@@ -12,7 +12,7 @@ const footerColumns = [
   {
     title: 'Company',
     links: [
-      { href: '#about', label: 'About EstatePro' },
+      { href: '#about', label: 'About Taakra' },
       { href: '#services', label: 'Services' },
       { href: '/send-email', label: 'Support Contact' },
     ],
@@ -34,19 +34,19 @@ export function HomeFooter() {
         <div className="grid gap-10 lg:grid-cols-[1.5fr_2fr]">
           <div className="max-w-md">
             <div className="mb-4 flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[color:var(--surface-muted)] text-xs font-bold tracking-[0.14em]">
-                EP
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[color:var(--surface-muted)] text-lg">
+                ❄️
               </span>
               <div>
-                <p className="text-base font-semibold tracking-tight">EstatePro</p>
+                <p className="text-base font-semibold tracking-tight">Taakra</p>
                 <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--muted)]">
-                  Premium Property Network
+                  Snowy Competition Platform
                 </p>
               </div>
             </div>
             <p className="text-sm leading-relaxed text-[color:var(--muted)]">
-              A modern property platform for discovery, client communication,
-              and managed video consultations.
+              Transform competition discovery into a snowstorm of opportunities.
+              Each competition is a unique snowflake waiting for you.
             </p>
           </div>
 
@@ -75,8 +75,8 @@ export function HomeFooter() {
 
         <div className="divider mt-10" />
         <div className="mt-5 flex flex-col gap-2 text-xs text-[color:var(--muted)] sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 EstatePro. All rights reserved.</p>
-          <p>Built for high-trust real estate operations.</p>
+          <p>© 2026 Taakra. All rights reserved.</p>
+          <p>Built for discovering competitions in a snowstorm of opportunities.</p>
         </div>
       </div>
     </footer>
