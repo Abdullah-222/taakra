@@ -1,0 +1,28 @@
+name: Simple SSH Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH Deploy to EC2
+        run: |
+          # Write SSH key
+          echo "${{ secrets.PRIVATE_KEY}}" > ~/ssh_key
+          chmod 600 ~/ssh_key
+
+          # Connect and run remote commands
+          ssh -i ~/ssh_key -o StrictHostKeyChecking=no root@147.182.206.208"
+            # Navigate to project
+            cd ~/taakra/http &&
+
+            # Force sync with latest GitHub repo
+
+
+            echo "Deployed successfully!!!"
+          "
