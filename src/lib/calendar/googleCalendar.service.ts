@@ -13,7 +13,21 @@ import { encrypt, decrypt } from '@/lib/encryption'
 // Google OAuth and Calendar API configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/calendar/callback`
+
+// Construct redirect URI - must match EXACTLY what's in Google Cloud Console
+function getRedirectUri(): string {
+  if (process.env.GOOGLE_REDIRECT_URI) {
+    // Remove trailing slash if present
+    return process.env.GOOGLE_REDIRECT_URI.replace(/\/$/, '')
+  }
+  
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  // Remove trailing slash from base URL
+  const cleanBaseUrl = baseUrl.replace(/\/$/, '')
+  return `${cleanBaseUrl}/api/calendar/callback`
+}
+
+const GOOGLE_REDIRECT_URI = getRedirectUri()
 const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/calendar.events'
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3'
 
@@ -31,6 +45,12 @@ function validateConfig() {
  */
 export function getAuthorizationUrl(state?: string): string {
   validateConfig()
+  
+  // Log the redirect URI for debugging (remove in production)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Calendar OAuth] Redirect URI:', GOOGLE_REDIRECT_URI)
+    console.log('[Calendar OAuth] Client ID:', GOOGLE_CLIENT_ID?.substring(0, 20) + '...')
+  }
   
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID!,
