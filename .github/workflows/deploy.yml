@@ -16,7 +16,17 @@ jobs:
           chmod 600 ~/ssh_key
 
           ssh -i ~/ssh_key -o StrictHostKeyChecking=no root@147.182.206.208 << 'EOF'
-            cd ~/taakra/http
-            git pull origin main
-            echo "Deployed successfully!!!!!"
+            cd ~/taakra/http &&
+
+            git pull origin main &&
+
+            pnpm install &&
+
+            pm2 delete taakra || true &&
+
+            pm2 start "pnpm dev" --name taakra &&
+
+            pm2 save &&
+
+            echo "Dev deployed successfully!!!!!"
           EOF
