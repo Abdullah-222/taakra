@@ -2,6 +2,7 @@
 
 import { memo, useState } from 'react'
 import { UserAvatar } from './UserAvatar'
+import { theme } from '@/lib/theme'
 
 export type Author = {
   id: number
@@ -32,22 +33,22 @@ function formatTime(dateStr: string) {
   const d = new Date(dateStr)
   const now = new Date()
   const diff = now.getTime() - d.getTime()
-  
+
   if (diff < 60000) return 'now'
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
   if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`
-  
+
   const isToday = d.toDateString() === now.toDateString()
   if (isToday) {
     return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
   }
-  
+
   const isThisYear = d.getFullYear() === now.getFullYear()
   if (isThisYear) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
-  
+
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
@@ -63,6 +64,24 @@ function formatFullDate(dateStr: string) {
   })
 }
 
+const depthBorderColors = [
+  'var(--color-frost-300)',
+  'var(--color-glacier-500)',
+  'var(--color-frost-400)',
+  'var(--color-glacier-600)',
+  'var(--color-frost-200)',
+  'var(--color-glacier-500)',
+]
+
+const depthDotColors = [
+  'var(--color-frost-400)',
+  'var(--color-glacier-500)',
+  'var(--color-frost-300)',
+  'var(--color-glacier-600)',
+  'var(--color-frost-400)',
+  'var(--color-glacier-500)',
+]
+
 const MessageThreadComponent = ({
   message,
   depth = 0,
@@ -72,57 +91,39 @@ const MessageThreadComponent = ({
 }: MessageThreadProps) => {
   const [collapsed, setCollapsed] = useState(false)
   const [showFullDate, setShowFullDate] = useState(false)
-  
+
   const isNested = depth > 0
   const hasReplies = message.replies && message.replies.length > 0
   const canReply = currentUserId && depth < maxDepth
   const isOwnMessage = currentUserId === message.author.id
 
   const displayName = message.author.name?.trim() || message.author.email.split('@')[0] || 'Anonymous'
-
-  // Color coding for thread depth
-  const getThreadColor = (level: number) => {
-    const colors = [
-      'border-emerald-400 dark:border-emerald-600',
-      'border-blue-400 dark:border-blue-600',
-      'border-purple-400 dark:border-purple-600',
-      'border-pink-400 dark:border-pink-600',
-      'border-orange-400 dark:border-orange-600',
-      'border-cyan-400 dark:border-cyan-600',
-    ]
-    return colors[level % colors.length]
-  }
+  const borderColor = isNested ? depthBorderColors[(depth - 1) % depthBorderColors.length] : 'transparent'
+  const dotColor = isNested ? depthDotColors[(depth - 1) % depthDotColors.length] : 'transparent'
 
   return (
     <div
-      className={`
-        ${isNested ? 'relative pl-4 sm:pl-6 ml-2 sm:ml-3 border-l-2' : ''} 
-        ${isNested ? getThreadColor(depth - 1) : ''}
-        transition-all duration-200
-      `}
+      className={`${isNested ? 'relative pl-4 sm:pl-6 ml-2 sm:ml-3 border-l-2' : ''} transition-all duration-200`}
+      style={isNested ? { borderColor } : undefined}
     >
-      {/* Connection dot for nested messages */}
       {isNested && (
         <div
-          className={`
-            absolute -left-[9px] top-6 w-2 h-2 rounded-full 
-            border-2 border-white dark:border-gray-900
-            ${depth === 1 ? 'bg-emerald-500' : depth === 2 ? 'bg-blue-500' : depth === 3 ? 'bg-purple-500' : depth === 4 ? 'bg-pink-500' : 'bg-orange-500'}
-          `}
+          className="absolute -left-[9px] top-6 w-2 h-2 rounded-full border-2 border-[var(--glass-border)]"
+          style={{ background: dotColor }}
         />
       )}
 
       <div
-        className={`
-          group rounded-2xl p-3 sm:p-4 transition-all duration-200
-          inline-block max-w-3xl
-          ${message._optimistic 
-            ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-2 border-emerald-200 dark:border-emerald-800 animate-pulse' 
-            : 'bg-white dark:bg-gray-800 border border-stone-200 dark:border-gray-700 hover:border-stone-300 dark:hover:border-gray-600'
-          }
-          ${isOwnMessage ? 'ring-1 ring-emerald-500/20' : ''}
-          shadow-sm hover:shadow-md
-        `}
+        className={`group rounded-2xl p-3 sm:p-4 transition-all duration-200 inline-block max-w-3xl min-w-0 ${message._optimistic ? 'animate-pulse' : ''}`}
+        style={{
+          background: message._optimistic
+            ? 'var(--color-frost-50)'
+            : 'var(--glass-bg)',
+          border: message._optimistic
+            ? `2px solid ${theme.colors.frost300}`
+            : theme.glass.border,
+          boxShadow: message._optimistic ? 'none' : (isOwnMessage ? theme.glow.subtle : theme.glass.shadow),
+        }}
       >
         <div className="flex items-start gap-3">
           <UserAvatar
@@ -138,11 +139,21 @@ const MessageThreadComponent = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-1">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="font-semibold text-stone-900 dark:text-white text-[13px] truncate">
+                <span
+                  className="font-semibold text-[13px] truncate"
+                  style={{ color: theme.colors.textPrimary }}
+                >
                   {displayName}
                 </span>
                 {message.author.role === 'admin' && (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                  <span
+                    className="px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                    style={{
+                      background: 'var(--color-frost-100)',
+                      color: theme.colors.glacier500,
+                      border: `1px solid var(--color-frost-300)`,
+                    }}
+                  >
                     ADMIN
                   </span>
                 )}
@@ -150,14 +161,18 @@ const MessageThreadComponent = ({
               <button
                 type="button"
                 onClick={() => setShowFullDate(!showFullDate)}
-                className="text-xs text-stone-500 dark:text-gray-400 hover:text-stone-700 dark:hover:text-gray-300 transition-colors shrink-0"
+                className="text-xs shrink-0 transition-colors hover:opacity-80"
+                style={{ color: theme.colors.textMuted }}
                 title={formatFullDate(message.createdAt)}
               >
                 {showFullDate ? formatFullDate(message.createdAt) : formatTime(message.createdAt)}
               </button>
             </div>
 
-            <p className="text-stone-700 dark:text-gray-300 text-[13px] leading-relaxed whitespace-pre-wrap break-words">
+            <p
+              className="text-[13px] leading-relaxed whitespace-pre-wrap break-words"
+              style={{ color: theme.colors.textSecondary }}
+            >
               {message.content}
             </p>
 
@@ -166,7 +181,10 @@ const MessageThreadComponent = ({
                 <button
                   type="button"
                   onClick={() => onReply(message)}
-                  className="opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-stone-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all"
+                  className="opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all hover:opacity-90"
+                  style={{
+                    color: theme.colors.frost400,
+                  }}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -178,7 +196,8 @@ const MessageThreadComponent = ({
                 <button
                   type="button"
                   onClick={() => setCollapsed(!collapsed)}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-gray-200 hover:bg-stone-100 dark:hover:bg-gray-700 transition-all"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all hover:opacity-80"
+                  style={{ color: theme.colors.textMuted }}
                 >
                   {collapsed ? (
                     <>
@@ -202,7 +221,6 @@ const MessageThreadComponent = ({
         </div>
       </div>
 
-      {/* Nested replies */}
       {hasReplies && !collapsed && (
         <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
           {message.replies!.map((reply) => (

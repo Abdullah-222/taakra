@@ -32,7 +32,7 @@ export function ContactFAQ() {
 
   return (
     <div
-      className="p-6 rounded-2xl backdrop-blur-xl"
+      className="p-4 sm:p-6 rounded-xl sm:rounded-2xl backdrop-blur-xl min-w-0"
       style={{
         background: theme.glass.background,
         border: theme.glass.border,
@@ -41,7 +41,7 @@ export function ContactFAQ() {
       }}
     >
       <h3
-        className="text-lg font-semibold mb-4 flex items-center gap-2"
+        className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2"
         style={{ color: theme.colors.textPrimary }}
       >
         <span aria-hidden>❓</span>
@@ -51,7 +51,7 @@ export function ContactFAQ() {
         {faqs.map((faq, index) => (
           <div
             key={index}
-            className="rounded-xl overflow-hidden transition-colors"
+            className="rounded-lg sm:rounded-xl overflow-hidden transition-colors min-w-0"
             style={{
               border: '1px solid var(--glass-border)',
               background: openIndex === index ? 'var(--color-frost-50)' : 'transparent',
@@ -60,10 +60,10 @@ export function ContactFAQ() {
             <button
               type="button"
               onClick={() => setOpenIndex(openIndex === index ? null : index)}
-              className="w-full text-left px-4 py-3 flex items-center justify-between gap-3"
+              className="w-full text-left px-3 sm:px-4 py-3 min-h-[48px] flex items-center justify-between gap-3 min-w-0"
               style={{ color: theme.colors.textPrimary }}
             >
-              <span className="text-sm font-medium pr-2">{faq.q}</span>
+              <span className="text-sm font-medium pr-2 min-w-0 break-words text-left">{faq.q}</span>
               <span
                 className="shrink-0 text-lg leading-none transition-transform duration-200"
                 style={{
@@ -76,7 +76,7 @@ export function ContactFAQ() {
             </button>
             {openIndex === index && (
               <div
-                className="px-4 pb-3 pt-0 text-sm leading-relaxed border-t"
+                className="px-3 sm:px-4 pb-3 pt-0 text-xs sm:text-sm leading-relaxed border-t break-words"
                 style={{
                   color: theme.colors.textSecondary,
                   borderColor: 'var(--glass-border)',

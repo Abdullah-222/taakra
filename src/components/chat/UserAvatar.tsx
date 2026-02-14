@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { theme } from '@/lib/theme'
 
 type UserAvatarProps = {
   userId: number
@@ -33,15 +34,7 @@ export function UserAvatar({
   const displayName = name?.trim() || email.split('@')[0] || 'Anonymous'
   const initial = displayName.charAt(0).toUpperCase()
 
-  const getBadgeColor = (userRole?: string | null) => {
-    if (userRole === 'admin') return 'bg-gradient-to-br from-purple-500 to-purple-700'
-    return 'bg-gradient-to-br from-emerald-500 to-emerald-700'
-  }
-
-  const getBadgeLabel = (userRole?: string | null) => {
-    if (userRole === 'admin') return '👑'
-    return null
-  }
+  const isAdmin = role === 'admin'
 
   return (
     <div
@@ -56,33 +49,68 @@ export function UserAvatar({
             alt={displayName}
             width={size === 'sm' ? 32 : size === 'md' ? 40 : 48}
             height={size === 'sm' ? 32 : size === 'md' ? 40 : 48}
-            className="rounded-full object-cover ring-2 ring-white dark:ring-gray-800"
+            className="rounded-full object-cover border-2"
+            style={{ borderColor: 'var(--glass-border)' }}
             onError={() => setImgError(true)}
           />
         ) : (
           <div
-            className={`${sizeClasses[size]} rounded-full ${getBadgeColor(role)} flex items-center justify-center text-white font-semibold ring-2 ring-white dark:ring-gray-800`}
+            className={`${sizeClasses[size]} rounded-full flex items-center justify-center text-white font-semibold border-2`}
+            style={{
+              background: isAdmin
+                ? `linear-gradient(135deg, ${theme.colors.glacier600} 0%, ${theme.colors.glacier500} 100%)`
+                : theme.buttons.primary.background,
+              borderColor: 'var(--glass-border)',
+            }}
           >
             {initial}
           </div>
         )}
-        {getBadgeLabel(role) && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-[10px]">
-            {getBadgeLabel(role)}
+        {isAdmin && (
+          <div
+            className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px]"
+            style={{
+              background: theme.glass.background,
+              border: theme.glass.border,
+            }}
+          >
+            ❄️
           </div>
         )}
       </div>
 
       {showTooltip && showTooltipState && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none">
-          <div className="bg-gray-900 dark:bg-gray-700 text-white px-3 py-2 rounded-lg shadow-xl text-xs whitespace-nowrap">
+          <div
+            className="px-3 py-2 rounded-lg shadow-xl text-xs whitespace-nowrap"
+            style={{
+              background: theme.colors.offWhite,
+              border: theme.glass.border,
+              color: theme.colors.textPrimary,
+              boxShadow: theme.glass.shadow,
+            }}
+          >
             <div className="font-semibold">{displayName}</div>
-            <div className="text-gray-300 dark:text-gray-400 text-[10px]">{email}</div>
-            {role === 'admin' && (
-              <div className="mt-1 text-purple-300 text-[10px] font-medium">Admin</div>
+            <div className="text-[10px]" style={{ color: theme.colors.textMuted }}>
+              {email}
+            </div>
+            {isAdmin && (
+              <div
+                className="mt-1 text-[10px] font-medium"
+                style={{ color: theme.colors.frost400 }}
+              >
+                Admin
+              </div>
             )}
           </div>
-          <div className="w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45 absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1" />
+          <div
+            className="w-2 h-2 rotate-45 absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1"
+            style={{
+              background: theme.colors.offWhite,
+              borderRight: theme.glass.border,
+              borderBottom: theme.glass.border,
+            }}
+          />
         </div>
       )}
     </div>

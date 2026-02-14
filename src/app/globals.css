@@ -86,12 +86,14 @@
   border-color: var(--border);
 }
 
-html,
-body {
+html {
   min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
+  min-height: 100%;
+  overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-manrope), "Manrope", "Inter", sans-serif;
@@ -116,6 +118,8 @@ a {
   max-width: 80rem;
   margin-inline: auto;
   padding-inline: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (min-width: 640px) {
@@ -129,6 +133,7 @@ a {
     padding-inline: 2rem;
   }
 }
+
 
 .surface-card {
   background: var(--surface);
@@ -220,6 +225,12 @@ a {
   height: 1px;
   width: 100%;
   background: var(--border);
+}
+
+/* Chat input focus (Taakra theme) */
+.chat-input-wrap:focus-within {
+  border-color: var(--color-glacier-500);
+  box-shadow: 0 0 0 4px rgba(54, 158, 255, 0.15);
 }
 
 /* --- Winter Theme Animations --- */

@@ -49,6 +49,7 @@ export function useAuth() {
     }
   }
 
-  return { user, loading, logout, checkAuth }
+  return { 
+    user, loading, logout, checkAuth }
 }
 

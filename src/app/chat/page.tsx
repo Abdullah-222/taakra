@@ -8,6 +8,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { toast } from '@/components/ui/ToasterProvider'
 import { MessageThread, type Message, type Author } from '@/components/chat/MessageThread'
 import { UserAvatar } from '@/components/chat/UserAvatar'
+import { Snowfall } from '@/components/ui/Snowfall'
+import { theme } from '@/lib/theme'
 
 const EmojiPicker = dynamic(
   () => import('emoji-picker-react').then((mod) => mod.default),
@@ -113,9 +115,9 @@ export default function CommunityChatPage() {
     const optimisticMsg: Message = {
       id: tempId,
       content: contentToSend,
-      author: { 
-        id: user.id, 
-        email: user.email, 
+      author: {
+        id: user.id,
+        email: user.email,
         name: user.name ?? null,
         imageUrl: user.imageUrl ?? null,
         role: user.role ?? null
@@ -140,9 +142,9 @@ export default function CommunityChatPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to send')
       await fetchMessages()
-    } catch (err: any) {
+    } catch (err: unknown) {
       setMessages((prev) => removeOptimistic(prev, tempId))
-      toast.error(err.message || 'Failed to send')
+      toast.error(err instanceof Error ? err.message : 'Failed to send')
     } finally {
       setSubmitting(false)
     }
@@ -164,9 +166,10 @@ export default function CommunityChatPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-stone-50 dark:bg-gray-900 flex flex-col">
-        <main className="flex-1 flex items-center justify-center">
-          <span className="text-stone-500">Loading...</span>
+      <div className="min-h-screen flex flex-col" style={{ background: theme.colors.darkIce }}>
+        <Snowfall />
+        <main className="flex-1 flex items-center justify-center relative z-10">
+          <span style={{ color: theme.colors.textMuted }}>Loading...</span>
         </main>
         <HomeFooter />
       </div>
@@ -174,43 +177,93 @@ export default function CommunityChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-50 to-emerald-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-emerald-950/20 flex flex-col">
-      <main className="flex-1 flex flex-col max-w-5xl mx-auto w-full px-4 sm:px-6 py-6">
-        <div className="flex items-center justify-between mb-6 gap-4">
+    <div
+      className="min-h-screen flex flex-col relative overflow-hidden"
+      style={{ background: theme.colors.darkIce }}
+    >
+      <Snowfall />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(circle at 50% 0%, ${theme.colors.frost100}18 0%, transparent 50%)`,
+        }}
+      />
+
+      <main className="flex-1 flex flex-col max-w-5xl mx-auto w-full px-4 sm:px-6 py-6 relative z-10">
+        <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
           <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl md:text-3xl font-bold text-stone-900 dark:text-white tracking-tight">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1
+                className="text-2xl md:text-3xl font-bold tracking-tight"
+                style={{ color: theme.colors.textPrimary }}
+              >
                 Community Chat
               </h1>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+              <div
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                style={{
+                  background: theme.glass.background,
+                  border: theme.glass.border,
+                  boxShadow: theme.glass.shadow,
+                }}
+              >
+                <div
+                  className="w-2 h-2 rounded-full animate-pulse"
+                  style={{ background: theme.colors.frost400 }}
+                />
+                <span className="text-xs font-semibold" style={{ color: theme.colors.frost300 }}>
                   {messageCount} {messageCount === 1 ? 'message' : 'messages'}
                 </span>
               </div>
             </div>
-            <p className="text-stone-600 dark:text-gray-400 text-sm mt-1">
-              Join the conversation. Reply to threads.
+            <p className="text-sm mt-1" style={{ color: theme.colors.textMuted }}>
+              Join the conversation. Reply to threads. ❄️
             </p>
           </div>
           {!user && (
             <Link
               href="/login"
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold text-sm shadow-lg shadow-emerald-900/20 transition-all whitespace-nowrap"
+              className="inline-flex items-center justify-center min-h-[44px] px-4 py-2.5 rounded-xl font-semibold text-sm shadow-lg transition-all whitespace-nowrap"
+              style={{
+                background: theme.buttons.primary.background,
+                color: theme.buttons.primary.color,
+                boxShadow: theme.buttons.primary.shadow,
+              }}
             >
               Sign in
             </Link>
           )}
         </div>
 
-        <div className="flex-1 flex flex-col min-h-0 rounded-2xl border border-stone-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-2xl shadow-stone-900/10 overflow-hidden backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-stone-200 dark:border-gray-700 bg-gradient-to-r from-stone-50 to-emerald-50/50 dark:from-gray-900 dark:to-emerald-950/30">
+        <div
+          className="flex-1 flex flex-col min-h-0 rounded-2xl overflow-hidden backdrop-blur-xl"
+          style={{
+            border: theme.glass.border,
+            background: theme.glass.background,
+            boxShadow: theme.glass.shadow,
+            borderRadius: theme.radius.lg,
+          }}
+        >
+          {/* Header bar */}
+          <div
+            className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b min-h-[56px]"
+            style={{
+              borderColor: 'var(--glass-border)',
+              background: 'var(--color-frost-50)',
+            }}
+          >
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ background: theme.colors.frost400 }}
+                />
+                <div
+                  className="absolute inset-0 w-2.5 h-2.5 rounded-full animate-ping opacity-75"
+                  style={{ background: theme.colors.frost400 }}
+                />
               </div>
-              <span className="text-sm font-semibold text-stone-800 dark:text-gray-200">
+              <span className="text-sm font-semibold" style={{ color: theme.colors.textPrimary }}>
                 Live Chat
               </span>
             </div>
@@ -218,30 +271,41 @@ export default function CommunityChatPage() {
               <button
                 type="button"
                 onClick={scrollToBottom}
-                className="px-2 py-1 rounded-lg text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium text-white transition-all"
+                style={{
+                  background: theme.buttons.primary.background,
+                  boxShadow: theme.buttons.primary.shadow,
+                }}
               >
                 ↓ New messages
               </button>
             )}
           </div>
 
+          {/* Message feed */}
           <div
             ref={feedRef}
             onScroll={handleScroll}
             className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 min-h-[320px] scroll-smooth"
+            style={{ background: 'var(--glass-bg)' }}
           >
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="flex flex-col items-center gap-4">
                   <div className="relative">
-                    <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                    <div className="absolute inset-0 w-12 h-12 border-4 border-transparent border-b-emerald-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
+                    <div
+                      className="w-12 h-12 rounded-full border-4 border-t-transparent animate-spin"
+                      style={{
+                        borderColor: `${theme.colors.frost300}40`,
+                        borderTopColor: theme.colors.glacier500,
+                      }}
+                    />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-medium text-stone-700 dark:text-gray-300">
+                    <p className="text-sm font-medium" style={{ color: theme.colors.textPrimary }}>
                       Loading chat...
                     </p>
-                    <p className="text-xs text-stone-500 dark:text-gray-400 mt-1">
+                    <p className="text-xs mt-1" style={{ color: theme.colors.textMuted }}>
                       Fetching latest messages
                     </p>
                   </div>
@@ -249,13 +313,20 @@ export default function CommunityChatPage() {
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/30 dark:to-emerald-800/30 flex items-center justify-center text-4xl mb-5 shadow-lg">
+                <div
+                  className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mb-5"
+                  style={{
+                    background: theme.glass.background,
+                    border: theme.glass.border,
+                    boxShadow: theme.glass.shadow,
+                  }}
+                >
                   💬
                 </div>
-                <p className="text-lg font-semibold text-stone-800 dark:text-gray-200">
+                <p className="text-lg font-semibold" style={{ color: theme.colors.textPrimary }}>
                   No messages yet
                 </p>
-                <p className="text-sm text-stone-500 dark:text-gray-400 mt-2 max-w-xs">
+                <p className="text-sm mt-2 max-w-xs" style={{ color: theme.colors.textMuted }}>
                   {user ? 'Be the first to start the conversation!' : 'Sign in to join the discussion.'}
                 </p>
               </div>
@@ -277,9 +348,22 @@ export default function CommunityChatPage() {
           </div>
 
           {user && (
-            <div className="p-4 border-t border-stone-200 dark:border-gray-700 bg-gradient-to-r from-white to-stone-50/50 dark:from-gray-800 dark:to-gray-900/50">
+            <div
+              className="p-4 border-t"
+              style={{
+                borderColor: 'var(--glass-border)',
+                background: 'var(--color-frost-50)',
+              }}
+            >
               {replyingTo && (
-                <div className="flex items-center gap-3 mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-900/20 dark:to-emerald-800/20 border border-emerald-200 dark:border-emerald-800 shadow-sm">
+                <div
+                  className="flex items-center gap-3 mb-3 px-3 py-2.5 rounded-xl"
+                  style={{
+                    background: theme.glass.background,
+                    border: theme.glass.border,
+                    boxShadow: theme.glass.shadow,
+                  }}
+                >
                   <UserAvatar
                     userId={replyingTo.author.id}
                     name={replyingTo.author.name}
@@ -291,21 +375,31 @@ export default function CommunityChatPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                      <span
+                        className="text-[10px] font-bold uppercase tracking-wider"
+                        style={{ color: theme.colors.frost400 }}
+                      >
                         Replying to
                       </span>
-                      <span className="text-sm font-semibold text-emerald-900 dark:text-emerald-300 truncate">
+                      <span
+                        className="text-sm font-semibold truncate"
+                        style={{ color: theme.colors.textPrimary }}
+                      >
                         {displayName(replyingTo.author)}
                       </span>
                     </div>
-                    <p className="text-xs text-stone-600 dark:text-gray-400 truncate mt-0.5">
+                    <p
+                      className="text-xs truncate mt-0.5"
+                      style={{ color: theme.colors.textMuted }}
+                    >
                       {replyingTo.content.slice(0, 60)}{replyingTo.content.length > 60 ? '…' : ''}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setReplyingTo(null)}
-                    className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-emerald-600 hover:text-emerald-800 hover:bg-emerald-200 dark:hover:text-emerald-300 dark:hover:bg-emerald-900/40 transition-all"
+                    className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
+                    style={{ color: theme.colors.textMuted }}
                     aria-label="Cancel reply"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,7 +409,15 @@ export default function CommunityChatPage() {
                 </div>
               )}
               <form onSubmit={handleSend} className="relative">
-                <div className="flex gap-2 items-end rounded-2xl border-2 border-stone-200 dark:border-gray-600 bg-white dark:bg-gray-900 focus-within:border-emerald-500 dark:focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/20 dark:focus-within:ring-emerald-500/30 transition-all shadow-sm">
+                <div
+                  className="chat-input-wrap flex gap-2 items-end rounded-2xl transition-all"
+                  style={{
+                    border: theme.inputs.border,
+                    background: theme.inputs.background,
+                    borderRadius: theme.radius.md,
+                    boxShadow: 'none',
+                  }}
+                >
                   <textarea
                     ref={inputRef}
                     value={input}
@@ -329,14 +431,16 @@ export default function CommunityChatPage() {
                     }}
                     placeholder={replyingTo ? `Reply to ${displayName(replyingTo.author)}...` : 'Type your message... (Enter to send, Shift+Enter for new line)'}
                     rows={2}
-                    className="flex-1 min-h-[52px] max-h-32 resize-none bg-transparent px-4 py-3 text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-gray-500 focus:outline-none text-sm rounded-2xl"
+                    className="flex-1 min-h-[52px] max-h-32 resize-none bg-transparent px-4 py-3 placeholder:opacity-70 focus:outline-none text-sm rounded-2xl min-w-0"
+                    style={{ color: 'var(--input-text)' }}
                   />
                   <div className="flex items-center gap-1 pr-2 pb-2">
                     <div className="relative">
                       <button
                         type="button"
                         onClick={() => setShowEmoji((e) => !e)}
-                        className="p-2 rounded-xl text-stone-500 hover:text-stone-700 hover:bg-stone-200 dark:hover:text-gray-400 dark:hover:bg-gray-700 transition-colors"
+                        className="p-2 rounded-xl transition-colors hover:opacity-80"
+                        style={{ color: theme.colors.textMuted }}
                         title="Add emoji"
                       >
                         <span className="text-xl">😊</span>
@@ -355,11 +459,17 @@ export default function CommunityChatPage() {
                     <button
                       type="submit"
                       disabled={submitting || !input.trim()}
-                      className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-stone-300 disabled:to-stone-400 text-white shadow-lg shadow-emerald-900/25 transition-all active:scale-95"
+                      className="p-2.5 rounded-xl text-white shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        background: theme.buttons.primary.background,
+                        boxShadow: theme.buttons.primary.shadow,
+                      }}
                       title="Send message (Enter)"
                     >
                       {submitting ? (
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <div
+                          className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin"
+                        />
                       ) : (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

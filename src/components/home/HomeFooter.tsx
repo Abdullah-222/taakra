@@ -29,10 +29,10 @@ const footerColumns = [
 
 export function HomeFooter() {
   return (
-    <footer className="border-t border-[var(--border)] bg-[color:var(--surface)] py-14">
+    <footer className="border-t border-[var(--border)] bg-[color:var(--surface)] py-10 sm:py-14">
       <div className="content-wrap">
-        <div className="grid gap-10 lg:grid-cols-[1.5fr_2fr]">
-          <div className="max-w-md">
+        <div className="grid gap-8 sm:gap-10 lg:grid-cols-[1.5fr_2fr]">
+          <div className="max-w-md min-w-0">
             <div className="mb-4 flex items-center gap-2">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[color:var(--surface-muted)] text-lg">
                 ❄️
@@ -50,18 +50,18 @@ export function HomeFooter() {
             </p>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-3">
+          <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-3 min-w-0">
             {footerColumns.map((column) => (
-              <div key={column.title}>
-                <h3 className="mb-3 text-sm font-semibold text-[color:var(--foreground)]">
+              <div key={column.title} className="min-w-0">
+                <h3 className="mb-2 sm:mb-3 text-sm font-semibold text-[color:var(--foreground)]">
                   {column.title}
                 </h3>
-                <ul className="space-y-2">
+                <ul className="space-y-1.5 sm:space-y-2">
                   {column.links.map((link) => (
                     <li key={link.href + link.label}>
                       <Link
                         href={link.href}
-                        className="text-sm text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
+                        className="inline-block py-1.5 sm:py-0 text-sm text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
                       >
                         {link.label}
                       </Link>

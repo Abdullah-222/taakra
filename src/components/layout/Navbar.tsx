@@ -29,9 +29,9 @@ export function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 mx-4 mt-4 flex flex-col gap-0 rounded-2xl transition-all duration-300" style={{ boxShadow: theme.glass.shadow }}>
+    <header className="fixed top-0 left-0 right-0 z-50 mx-2 mt-2 sm:mx-4 sm:mt-4 flex flex-col gap-0 rounded-xl sm:rounded-2xl transition-all duration-300 overflow-hidden" style={{ boxShadow: theme.glass.shadow }}>
       <nav
-        className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 rounded-2xl"
+        className="flex items-center justify-between gap-2 px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl min-h-0"
         style={{
           background: theme.glass.background,
           backdropFilter: theme.glass.blur,
@@ -39,15 +39,15 @@ export function Navbar() {
         }}
       >
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href="/" className="flex items-center gap-2 group min-w-0 shrink">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-all">
             ❄️
           </div>
-          <div>
-            <span className="font-bold text-lg block leading-tight" style={{ color: theme.colors.textPrimary }}>
+          <div className="min-w-0">
+            <span className="font-bold text-base sm:text-lg block leading-tight truncate" style={{ color: theme.colors.textPrimary }}>
               EstatePro
             </span>
-            <span className="text-[10px] uppercase tracking-wider hidden sm:block" style={{ color: theme.colors.textMuted }}>
+            <span className="text-[10px] uppercase tracking-wider hidden sm:block truncate" style={{ color: theme.colors.textMuted }}>
               Competitions &amp; Community
             </span>
           </div>
@@ -68,12 +68,12 @@ export function Navbar() {
         </div>
 
         {/* Right: Theme, Notifications, Auth */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-4 shrink-0 flex-wrap justify-end">
           {user && <UserNotificationsBell userId={user.id} />}
           {user && String(user.role).toLowerCase() === 'admin' && (
             <Link
               href="/admin"
-              className="inline-flex px-3 py-2 rounded-xl text-sm font-medium border transition-colors shrink-0"
+              className="inline-flex items-center justify-center min-h-[40px] px-2.5 sm:px-3 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium border transition-colors shrink-0"
               style={{
                 borderColor: theme.glass.border,
                 color: theme.colors.textPrimary,
@@ -113,7 +113,7 @@ export function Navbar() {
             <>
               <Link href="/profile">
                 <button
-                  className="px-3 py-2 sm:px-4 rounded-xl text-sm font-medium border transition-colors"
+                  className="inline-flex items-center justify-center min-h-[40px] px-2.5 py-2 sm:px-4 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium border transition-colors"
                   style={{
                     borderColor: theme.glass.border,
                     color: theme.colors.textPrimary,
@@ -126,7 +126,7 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={logout}
-                className="px-4 py-2 sm:px-5 rounded-xl text-sm font-bold shadow-lg transition-transform hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center min-h-[40px] px-3 py-2 sm:px-5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-lg transition-transform hover:-translate-y-0.5"
                 style={{
                   background: theme.buttons.primary.background,
                   color: theme.buttons.primary.color,
@@ -139,7 +139,7 @@ export function Navbar() {
             <>
               <Link href="/login">
                 <button
-                  className="px-3 py-2 sm:px-4 rounded-xl text-sm font-medium border transition-colors"
+                  className="inline-flex items-center justify-center min-h-[40px] px-2.5 py-2 sm:px-4 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium border transition-colors"
                   style={{
                     borderColor: theme.glass.border,
                     color: theme.colors.textPrimary,
@@ -151,7 +151,7 @@ export function Navbar() {
               </Link>
               <Link href="/signup">
                 <button
-                  className="px-4 py-2 sm:px-5 rounded-xl text-sm font-bold shadow-lg transition-transform hover:-translate-y-0.5"
+                  className="inline-flex items-center justify-center min-h-[40px] px-3 py-2 sm:px-5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-lg transition-transform hover:-translate-y-0.5"
                   style={{
                     background: theme.buttons.primary.background,
                     color: theme.buttons.primary.color,
@@ -165,21 +165,22 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile: Competitions / Community / Meetings (same as HomeNav) */}
+      {/* Mobile: Competitions / Community / Meetings */}
       <nav
-        className="md:hidden flex gap-1 overflow-x-auto py-2 px-4 rounded-b-2xl"
+        className="md:hidden flex gap-1 overflow-x-auto py-2 px-3 rounded-b-xl sm:rounded-b-2xl scrollbar-thin snap-x snap-mandatory overflow-y-hidden"
         style={{
           background: theme.glass.background,
           borderLeft: theme.glass.border,
           borderRight: theme.glass.border,
           borderBottom: theme.glass.border,
+          WebkitOverflowScrolling: 'touch',
         }}
       >
         {primaryLinks.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className="whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-90"
+            className="whitespace-nowrap rounded-lg px-3 py-2.5 min-h-[44px] inline-flex items-center text-xs font-medium transition-colors hover:opacity-90 shrink-0 snap-start"
             style={{ color: theme.colors.textSecondary }}
           >
             {item.label}

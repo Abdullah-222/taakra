@@ -16,7 +16,7 @@ const categories = [
 ]
 
 const inputBase =
-  'w-full px-4 py-3 rounded-xl text-sm transition-all focus:outline-none placeholder:opacity-70'
+  'w-full min-w-0 px-4 py-3 min-h-[44px] rounded-xl text-sm transition-all focus:outline-none placeholder:opacity-70'
 const inputStyle = {
   background: 'var(--input-bg)',
   border: 'var(--input-border)',
@@ -247,9 +247,9 @@ export function ContactForm() {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Describe your question or issue in detail. Include competition name, transaction ID, or any error messages if relevant."
-          rows={6}
+          rows={5}
           maxLength={MESSAGE_MAX}
-          className={`${inputBase} resize-y min-h-[140px]`}
+          className={`${inputBase} resize-y !min-h-[120px] sm:!min-h-[140px]`}
           style={inputStyle}
           onFocus={(e) => {
             e.currentTarget.style.boxShadow = focusRing
@@ -260,9 +260,9 @@ export function ContactForm() {
             e.currentTarget.style.border = 'var(--input-border)'
           }}
         />
-        <p className="mt-1.5 text-xs flex justify-between" style={{ color: theme.colors.textMuted }}>
-          <span>Include competition name or transaction ID when relevant.</span>
-          <span className="shrink-0 ml-2">{message.length} / {MESSAGE_MAX}</span>
+        <p className="mt-1.5 text-xs flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1" style={{ color: theme.colors.textMuted }}>
+          <span className="min-w-0 break-words">Include competition name or transaction ID when relevant.</span>
+          <span className="shrink-0 sm:ml-2">{message.length} / {MESSAGE_MAX}</span>
         </p>
       </div>
 

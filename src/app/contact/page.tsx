@@ -60,9 +60,9 @@ export default function ContactPage() {
 
       <main className="relative z-10">
         {/* Hero + Mascot */}
-        <section className="content-wrap pt-10 sm:pt-14 lg:pt-20 pb-12 sm:pb-16">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid gap-12 lg:grid-cols-[1fr_340px] lg:gap-20 items-center">
+        <section className="content-wrap pt-8 sm:pt-14 lg:pt-20 pb-10 sm:pb-16">
+          <div className="max-w-6xl mx-auto w-full min-w-0">
+            <div className="grid gap-8 sm:gap-12 lg:grid-cols-[1fr_340px] lg:gap-20 items-center">
               <div className="text-center lg:text-left order-2 lg:order-1">
                 <div
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 backdrop-blur-xl"
@@ -82,7 +82,7 @@ export default function ContactPage() {
                 </div>
 
                 <h1
-                  className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-5 leading-tight"
+                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-5 leading-tight"
                   style={{
                     color: theme.colors.textPrimary,
                     textShadow: `0 0 40px ${theme.colors.frost300}40`,
@@ -135,10 +135,10 @@ export default function ContactPage() {
                   ))}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4">
                   <Link
                     href="/competitions"
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl font-semibold text-white transition-all duration-300 hover:scale-105"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:px-6 sm:py-3.5 rounded-2xl font-semibold text-white transition-all duration-300 hover:scale-105 min-h-[44px]"
                     style={{
                       background: theme.buttons.primary.background,
                       borderRadius: theme.radius.lg,
@@ -149,7 +149,7 @@ export default function ContactPage() {
                   </Link>
                   <Link
                     href="/signup"
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl font-semibold transition-all duration-300 hover:scale-105"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:px-6 sm:py-3.5 rounded-2xl font-semibold transition-all duration-300 hover:scale-105 min-h-[44px]"
                     style={{
                       background: theme.buttons.ghost.background,
                       border: theme.buttons.ghost.border,
@@ -162,9 +162,9 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="order-1 lg:order-2 flex justify-center lg:justify-end">
+              <div className="order-1 lg:order-2 flex justify-center lg:justify-end min-w-0">
                 <div
-                  className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-[340px] lg:h-[340px] rounded-3xl overflow-hidden flex-shrink-0 transition-transform duration-300 hover:scale-[1.02]"
+                  className="relative w-52 h-52 sm:w-72 sm:h-72 lg:w-[340px] lg:h-[340px] rounded-2xl sm:rounded-3xl overflow-hidden flex-shrink-0 transition-transform duration-300 hover:scale-[1.02]"
                   style={{
                     background: theme.glass.background,
                     border: theme.glass.border,
@@ -224,13 +224,13 @@ export default function ContactPage() {
                 >
                   <span className="text-3xl mb-3 block" aria-hidden>{topic.icon}</span>
                   <h3
-                    className="text-lg font-semibold mb-2"
+                    className="text-base sm:text-lg font-semibold mb-1.5 sm:mb-2 break-words"
                     style={{ color: theme.colors.textPrimary }}
                   >
                     {topic.title}
                   </h3>
                   <p
-                    className="text-sm leading-relaxed"
+                    className="text-xs sm:text-sm leading-relaxed break-words"
                     style={{ color: theme.colors.textMuted }}
                   >
                     {topic.description}
@@ -255,23 +255,23 @@ export default function ContactPage() {
                   borderRadius: theme.radius.xl,
                 }}
               >
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-2xl">✉️</span>
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                  <span className="text-xl sm:text-2xl shrink-0">✉️</span>
                   <h2
-                    className="text-2xl sm:text-3xl font-bold"
+                    className="text-xl sm:text-2xl lg:text-3xl font-bold break-words min-w-0"
                     style={{ color: theme.colors.textPrimary }}
                   >
                     Send us a message
                   </h2>
                 </div>
                 <p
-                  className="text-sm mb-2"
+                  className="text-xs sm:text-sm mb-2 break-words"
                   style={{ color: theme.colors.textMuted }}
                 >
                   Fill in the form below and we&apos;ll get back to you within 24–48 hours (business days). For urgent competition deadlines, mention the competition name and deadline in your message.
                 </p>
                 <p
-                  className="text-xs mb-8"
+                  className="text-xs mb-6 sm:mb-8"
                   style={{ color: theme.colors.textMuted }}
                 >
                   All fields marked with <span style={{ color: theme.colors.danger }}>*</span> are required.
@@ -280,9 +280,9 @@ export default function ContactPage() {
               </div>
 
               {/* Sidebar: Before you write + FAQ */}
-              <div className="space-y-8 order-1 lg:order-2">
+              <div className="space-y-6 sm:space-y-8 order-1 lg:order-2 min-w-0">
                 <div
-                  className="p-6 rounded-2xl backdrop-blur-xl"
+                  className="p-4 sm:p-6 rounded-xl sm:rounded-2xl backdrop-blur-xl"
                   style={{
                     background: theme.glass.background,
                     border: theme.glass.border,
@@ -318,10 +318,10 @@ export default function ContactPage() {
             </div>
 
             {/* Quick links */}
-            <div className="mt-12 flex flex-wrap justify-center gap-4 text-sm">
+            <div className="mt-8 sm:mt-12 flex flex-wrap justify-center gap-3 sm:gap-4 text-sm">
               <Link
                 href="/competitions"
-                className="px-5 py-2.5 rounded-xl font-medium transition-all hover:opacity-90"
+                className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 sm:px-5 sm:py-2.5 rounded-xl font-medium transition-all hover:opacity-90"
                 style={{
                   background: theme.glass.background,
                   border: theme.glass.border,
@@ -332,7 +332,7 @@ export default function ContactPage() {
               </Link>
               <Link
                 href="/chat"
-                className="px-5 py-2.5 rounded-xl font-medium transition-all hover:opacity-90"
+                className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 sm:px-5 sm:py-2.5 rounded-xl font-medium transition-all hover:opacity-90"
                 style={{
                   background: theme.glass.background,
                   border: theme.glass.border,
@@ -343,7 +343,7 @@ export default function ContactPage() {
               </Link>
               <Link
                 href="/meeting"
-                className="px-5 py-2.5 rounded-xl font-medium transition-all hover:opacity-90"
+                className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 sm:px-5 sm:py-2.5 rounded-xl font-medium transition-all hover:opacity-90"
                 style={{
                   background: theme.glass.background,
                   border: theme.glass.border,
@@ -354,7 +354,7 @@ export default function ContactPage() {
               </Link>
               <Link
                 href="/signup"
-                className="px-5 py-2.5 rounded-xl font-medium transition-all hover:opacity-90"
+                className="inline-flex items-center justify-center min-h-[44px] px-4 py-3 sm:px-5 sm:py-2.5 rounded-xl font-medium transition-all hover:opacity-90"
                 style={{
                   background: theme.glass.background,
                   border: theme.glass.border,
