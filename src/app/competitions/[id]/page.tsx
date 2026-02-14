@@ -1,6 +1,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import dynamic from 'next/dynamic'
 import { HomeFooter } from '@/components/home/HomeFooter'
 import { logActivity } from '@/lib/activity'
 import { getCurrentUser } from '@/lib/auth'
@@ -8,7 +11,19 @@ import { prisma } from '@/lib/prisma'
 import { theme } from '@/lib/theme'
 import { Snowfall } from '@/components/ui/Snowfall'
 import { CompetitionRegistrationForm } from './CompetitionRegistrationForm'
-import { CompetitionChat } from './CompetitionChat'
+
+// Lazy load CompetitionChat - it's heavy with socket.io
+const CompetitionChat = dynamic(
+  () => import('./CompetitionChat').then((mod) => ({ default: mod.CompetitionChat })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="p-4 text-center text-sm" style={{ color: 'var(--color-text-muted)' }}>
+        Loading chat...
+      </div>
+    ),
+  }
+)
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -100,6 +115,9 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
                     alt={competition.title}
                     fill
                     className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 75vw"
+                    priority
+                    quality={90}
                   />
                 </div>
               )}
@@ -178,12 +196,48 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
                     >
                       Rules of competition
                     </p>
-                    <p
-                      className="text-sm leading-relaxed whitespace-pre-line"
+                    <div
+                      className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none"
                       style={{ color: 'var(--color-text-secondary)' }}
                     >
-                      {competition.rules}
-                    </p>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          p: ({ children }) => <p className="my-2 first:mt-0 last:mb-0">{children}</p>,
+                          ul: ({ children }) => <ul className="my-2 pl-5 list-disc space-y-1">{children}</ul>,
+                          ol: ({ children }) => <ol className="my-2 pl-5 list-decimal space-y-1">{children}</ol>,
+                          li: ({ children }) => <li className="my-0.5">{children}</li>,
+                          strong: ({ children }) => <strong className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>{children}</strong>,
+                          h1: ({ children }) => <h1 className="text-lg font-bold mt-4 mb-2 first:mt-0" style={{ color: 'var(--color-text-primary)' }}>{children}</h1>,
+                          h2: ({ children }) => <h2 className="text-base font-bold mt-3 mb-2 first:mt-0" style={{ color: 'var(--color-text-primary)' }}>{children}</h2>,
+                          h3: ({ children }) => <h3 className="text-sm font-semibold mt-2 mb-1 first:mt-0" style={{ color: 'var(--color-text-primary)' }}>{children}</h3>,
+                          code: ({ children }) => (
+                            <code
+                              className="px-1.5 py-0.5 rounded text-[0.85em]"
+                              style={{ 
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                color: 'var(--color-text-primary)'
+                              }}
+                            >
+                              {children}
+                            </code>
+                          ),
+                          a: ({ href, children }) => (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline opacity-90 hover:opacity-100"
+                              style={{ color: 'var(--color-glacier-500)' }}
+                            >
+                              {children}
+                            </a>
+                          ),
+                        }}
+                      >
+                        {competition.rules}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 )}
 

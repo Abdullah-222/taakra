@@ -154,7 +154,15 @@ export default function PropertiesPage() {
                   >
                     <div className="relative h-52 border-b border-[var(--border)] bg-[color:var(--surface-muted)]">
                       {coverImage ? (
-                        <Image src={coverImage} alt={property.title} fill className="object-cover" />
+                        <Image 
+                          src={coverImage} 
+                          alt={property.title} 
+                          fill 
+                          className="object-cover"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          loading="lazy"
+                          quality={85}
+                        />
                       ) : (
                         <div className="flex h-full items-center justify-center text-sm text-[color:var(--muted)]">
                           No image

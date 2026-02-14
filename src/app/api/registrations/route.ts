@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 
+// Cache user registrations for 30 seconds
+export const revalidate = 30
+
 export async function GET() {
   try {
     const user = await getCurrentUser()
@@ -40,10 +43,17 @@ export async function GET() {
       },
     })
 
-    return NextResponse.json({
-      registrations,
-      calendarConnected: userWithCalendar?.calendarConnected || false,
-    })
+    return NextResponse.json(
+      {
+        registrations,
+        calendarConnected: userWithCalendar?.calendarConnected || false,
+      },
+      {
+        headers: {
+          'Cache-Control': 'private, s-maxage=30, stale-while-revalidate=60',
+        },
+      }
+    )
   } catch (error) {
     console.error('Error fetching registrations:', error)
     return NextResponse.json(

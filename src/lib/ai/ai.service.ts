@@ -130,6 +130,166 @@ export interface ChatResponse {
   error?: string
 }
 
+export interface GenerateRulesRequest {
+  title: string
+  description: string
+  category: string
+  subcategory?: string
+  prize?: string
+  tags?: string[]
+}
+
+/**
+ * Generate competition rules using AI
+ * Follows the Taakra Snow Assistant guidelines
+ */
+export async function generateCompetitionRules(
+  competitionData: GenerateRulesRequest,
+  userId: number | null = null
+): Promise<ChatResponse> {
+  if (!competitionData.title || !competitionData.description || !competitionData.category) {
+    return {
+      success: false,
+      reply: 'Title, description, and category are required to generate rules.',
+      cached: false,
+      error: 'Missing required fields',
+    }
+  }
+
+  // Check rate limit
+  if (!checkRateLimit(userId)) {
+    return {
+      success: false,
+      reply: 'You are generating rules too quickly. Please wait a moment.',
+      cached: false,
+      error: 'Rate limit exceeded',
+    }
+  }
+
+  // Build prompt for rules generation
+  const rulesPrompt = `Generate comprehensive competition rules for the following competition:
+
+Title: ${competitionData.title}
+Description: ${competitionData.description}
+Category: ${competitionData.category}${competitionData.subcategory ? `\nSubcategory: ${competitionData.subcategory}` : ''}${competitionData.prize ? `\nPrize: ${competitionData.prize}` : ''}${competitionData.tags && competitionData.tags.length > 0 ? `\nTags: ${competitionData.tags.join(', ')}` : ''}
+
+Generate professional competition rules that include:
+1. Eligibility criteria
+2. Submission guidelines
+3. Judging criteria
+4. Important deadlines and dates
+5. Prize and award information
+6. Code of conduct
+7. Disqualification conditions
+
+**IMPORTANT FORMATTING REQUIREMENTS:**
+- Use proper Markdown formatting to structure the rules clearly
+- Use **bold** for section headings (e.g., **Eligibility**, **Submission Guidelines**, **Judging Criteria**)
+- Use bullet points (- or *) for lists of requirements, criteria, or conditions
+- Use numbered lists (1., 2., 3.) for step-by-step instructions or ordered requirements
+- Use line breaks between major sections for readability
+- Ensure all dates, deadlines, and important information are clearly highlighted
+- Use proper paragraph breaks to separate different topics
+- Make sure the formatting renders correctly when displayed on the competition page
+
+Format the rules as a well-structured document using Markdown that can be properly displayed to participants. Be concise but comprehensive. Use professional language that matches Taakra's premium, winter-themed platform.`
+
+  const normalizedPrompt = normalizePrompt(rulesPrompt)
+  const promptHash = hashPrompt(normalizedPrompt)
+
+  try {
+    // Check cache first
+    const cached = await prisma.aiChatCache.findUnique({
+      where: { promptHash },
+    })
+
+    if (cached) {
+      await prisma.aiChatCache.update({
+        where: { id: cached.id },
+        data: { usageCount: { increment: 1 } },
+      })
+
+      return {
+        success: true,
+        reply: cached.aiResponse,
+        cached: true,
+      }
+    }
+
+    // No cache hit - call Groq
+    if (!groq) {
+      return {
+        success: false,
+        reply: 'AI service is currently unavailable. Please try again later.',
+        cached: false,
+        error: 'Groq API not configured',
+      }
+    }
+
+    // Build messages for rules generation
+    const messages = [
+      {
+        role: 'system' as const,
+        content: `${SYSTEM_PROMPT}
+
+**Additional Instructions for Rules Generation:**
+- Generate professional, comprehensive competition rules
+- Be clear and specific about eligibility, submission requirements, and judging criteria
+- Include all important information participants need to know
+- Use professional language that matches Taakra's premium tone
+- **CRITICAL: Apply proper Markdown formatting** to ensure rules display correctly:
+  * Use **bold** for section headings and important terms
+  * Use bullet points (- or *) for lists
+  * Use numbered lists (1., 2., 3.) for sequential steps
+  * Use line breaks between sections
+  * Ensure proper spacing and readability
+- Format as a well-structured Markdown document suitable for display on competition pages
+- Keep it concise but cover all essential aspects
+- Verify that all Markdown syntax is correct and will render properly`,
+      },
+      {
+        role: 'user' as const,
+        content: rulesPrompt,
+      },
+    ]
+
+    // Call Groq API
+    const completion = await groq.chat.completions.create({
+      messages,
+      model: GROQ_MODEL,
+      temperature: 0.7,
+      max_tokens: 1500, // More tokens for comprehensive rules
+    })
+
+    const aiResponse = completion.choices[0]?.message?.content || 'Sorry, I could not generate rules.'
+
+    // Store in cache
+    await prisma.aiChatCache.create({
+      data: {
+        promptHash,
+        originalPrompt: rulesPrompt,
+        aiResponse,
+        usageCount: 1,
+        userId: userId || null,
+      },
+    })
+
+    return {
+      success: true,
+      reply: aiResponse,
+      cached: false,
+    }
+  } catch (error) {
+    console.error('Error generating competition rules:', error)
+    return {
+      success: false,
+      reply: 'Sorry, I encountered an error generating rules. Please try again later.',
+      cached: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 /**
  * Main AI service function - SINGLE SOURCE OF TRUTH for Groq calls
  * Handles prompt normalization, hashing, caching, rate limiting, and Groq API calls

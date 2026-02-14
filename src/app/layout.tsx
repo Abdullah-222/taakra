@@ -4,7 +4,7 @@ import "./globals.css";
 import { ToasterProvider } from "@/components/ui/ToasterProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Navbar } from "@/components/layout/Navbar";
-import { TaakraChatWidget } from "@/components/ai/TaakraChatWidget";
+import { TaakraChatWidgetLazy } from "@/components/ai/TaakraChatWidgetLazy";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -43,7 +43,7 @@ export default function RootLayout({
           <div className="pt-24 min-h-screen">
             {children}
           </div>
-          <TaakraChatWidget />
+          <TaakraChatWidgetLazy />
         </ThemeProvider>
       </body>
     </html>

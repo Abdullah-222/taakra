@@ -99,7 +99,15 @@ function PropertyImageCarousel({ images }: { images: string[] }) {
   return (
     <div>
       <div className="relative aspect-video">
-        <Image src={images[0]} alt="Property image" fill className="object-cover" />
+        <Image 
+          src={images[0]} 
+          alt="Property image" 
+          fill 
+          className="object-cover"
+          sizes="(max-width: 1024px) 100vw, 80vw"
+          priority
+          quality={90}
+        />
       </div>
       {images.length > 1 && (
         <div className="grid gap-2 border-t border-[var(--border)] bg-[color:var(--surface)] p-3 sm:grid-cols-4">
@@ -108,7 +116,15 @@ function PropertyImageCarousel({ images }: { images: string[] }) {
               key={src + index}
               className="relative h-16 overflow-hidden rounded-lg border border-[var(--border)]"
             >
-              <Image src={src} alt={`Property thumbnail ${index + 1}`} fill className="object-cover" />
+              <Image 
+                src={src} 
+                alt={`Property thumbnail ${index + 1}`} 
+                fill 
+                className="object-cover"
+                sizes="(max-width: 640px) 50vw, 25vw"
+                loading="lazy"
+                quality={75}
+              />
             </div>
           ))}
         </div>

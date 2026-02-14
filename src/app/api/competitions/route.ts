@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// Cache competitions for 60 seconds (revalidate)
+export const revalidate = 60
+
 export async function GET() {
   try {
     const competitions = await prisma.competition.findMany({
@@ -17,7 +20,14 @@ export async function GET() {
       },
     })
 
-    return NextResponse.json({ competitions })
+    return NextResponse.json(
+      { competitions },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        },
+      }
+    )
   } catch (error) {
     console.error('Error fetching competitions:', error)
     return NextResponse.json(

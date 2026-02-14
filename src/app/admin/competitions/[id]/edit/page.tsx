@@ -54,6 +54,7 @@ export default function AdminEditCompetitionPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isUploadingImages, setIsUploadingImages] = useState(false)
   const [isUploadingVideos, setIsUploadingVideos] = useState(false)
+  const [isGeneratingRules, setIsGeneratingRules] = useState(false)
 
   const isSubmitting = state === 'saving'
   const glowEffect = currentTheme === 'dark' ? theme.glow.strong : '0 0 20px rgba(54, 158, 255, 0.2)'
@@ -152,6 +153,46 @@ export default function AdminEditCompetitionPage() {
 
   function handleRemoveTag(tagToRemove: string) {
     setTags(tags.filter((tag) => tag !== tagToRemove))
+  }
+
+  async function handleGenerateRules() {
+    // Validate required fields for rules generation
+    if (!title.trim() || !description.trim() || !category.trim()) {
+      toast.error('Please fill in title, description, and category before generating rules.')
+      return
+    }
+
+    setIsGeneratingRules(true)
+    try {
+      const response = await fetch('/api/ai/generate-rules', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          category,
+          subcategory: subcategory || undefined,
+          prize: prize || undefined,
+          tags: tags.length > 0 ? tags : undefined,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.rules) {
+        setRules(data.rules)
+        toast.success('Rules generated successfully! ✨')
+      } else {
+        toast.error(data.error || 'Failed to generate rules. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error generating rules:', error)
+      toast.error('Failed to generate rules. Please try again.')
+    } finally {
+      setIsGeneratingRules(false)
+    }
   }
 
   async function handleImagesSelected(files: FileList | null) {
@@ -420,13 +461,40 @@ export default function AdminEditCompetitionPage() {
 
           {/* Rules of competition */}
           <div>
-            <label
-              htmlFor="rules"
-              className="block text-sm font-medium mb-2"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              Rules of competition
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label
+                htmlFor="rules"
+                className="block text-sm font-medium"
+                style={{ color: 'var(--color-text-primary)' }}
+              >
+                Rules of competition
+              </label>
+              <button
+                type="button"
+                onClick={handleGenerateRules}
+                disabled={isSubmitting || isGeneratingRules || !title.trim() || !description.trim() || !category.trim()}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: isGeneratingRules 
+                    ? 'rgba(59, 130, 246, 0.3)' 
+                    : theme.buttons.primary.background,
+                  color: theme.buttons.primary.color,
+                  borderRadius: theme.radius.sm,
+                }}
+              >
+                {isGeneratingRules ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🤖</span>
+                    <span>Generate with AI</span>
+                  </>
+                )}
+              </button>
+            </div>
             <textarea
               id="rules"
               value={rules}
@@ -451,7 +519,7 @@ export default function AdminEditCompetitionPage() {
               placeholder="Enter the full rules of the competition as a paragraph (eligibility, submission guidelines, judging criteria, etc.)..."
             />
             <p className="mt-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Optional. Shown to participants on the competition page.
+              Optional. Shown to participants on the competition page. Click "Generate with AI" to auto-generate rules based on your competition details.
             </p>
           </div>
 
