@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPusherClient } from '@/lib/pusher/client'
+import { theme } from '@/lib/theme'
 
 type NotificationItem = {
   id: number
@@ -27,40 +28,45 @@ export function UserNotificationsBell({ userId }: { userId: number }) {
     return unreadCount > 99 ? '99+' : String(unreadCount)
   }, [unreadCount])
 
-  useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        const response = await fetch('/api/notifications')
-        const data = await response.json()
-        if (response.ok) {
-          setNotifications(data.notifications || [])
-          setUnreadCount(data.unreadCount || 0)
-        }
-      } catch (error) {
-        console.error('Failed to load notifications:', error)
-      } finally {
-        setLoading(false)
+  const loadNotifications = useCallback(async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/notifications')
+      const data = await response.json()
+      if (response.ok) {
+        setNotifications(data.notifications || [])
+        setUnreadCount(data.unreadCount ?? 0)
       }
+    } catch (error) {
+      console.error('Failed to load notifications:', error)
+    } finally {
+      setLoading(false)
     }
-
-    loadNotifications()
   }, [])
 
   useEffect(() => {
-    const pusher = createPusherClient()
-    if (!pusher) return
+    loadNotifications()
+  }, [loadNotifications])
 
-    const channel = pusher.subscribe(`user-notifications-${userId}`)
-    channel.bind('new-notification', (payload: { notification: NotificationItem }) => {
-      if (!payload?.notification) return
-      setNotifications((prev) => [payload.notification, ...prev].slice(0, 20))
-      setUnreadCount((prev) => prev + 1)
-    })
+  useEffect(() => {
+    try {
+      const pusher = createPusherClient()
+      if (!pusher) return
 
-    return () => {
-      channel.unbind_all()
-      channel.unsubscribe()
-      pusher.disconnect()
+      const channel = pusher.subscribe(`user-notifications-${userId}`)
+      channel.bind('new-notification', (payload: { notification: NotificationItem }) => {
+        if (!payload?.notification) return
+        setNotifications((prev) => [payload.notification, ...prev].slice(0, 20))
+        setUnreadCount((prev) => prev + 1)
+      })
+
+      return () => {
+        channel.unbind_all()
+        channel.unsubscribe()
+        pusher.disconnect()
+      }
+    } catch {
+      // Pusher not configured or subscription failed – bell still works without real-time
     }
   }, [userId])
 
@@ -96,20 +102,26 @@ export function UserNotificationsBell({ userId }: { userId: number }) {
     const nextOpen = !open
     setOpen(nextOpen)
     if (nextOpen) {
+      await loadNotifications()
       await markAllRead()
     }
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative shrink-0">
       <button
         type="button"
         onClick={handleToggle}
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-stone-600 hover:bg-stone-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
+        className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors hover:opacity-90"
+        style={{
+          color: theme.colors.textPrimary,
+          background: 'transparent',
+          border: 'none',
+        }}
         aria-label="Notifications"
       >
         <svg
-          className="h-5 w-5"
+          className="h-5 w-5 shrink-0"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -122,44 +134,60 @@ export function UserNotificationsBell({ userId }: { userId: number }) {
           />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 rounded-full bg-emerald-600 px-1.5 py-0.5 text-[10px] font-semibold text-white min-w-[18px] text-center">
+          <span
+            className="absolute -top-0.5 -right-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white min-w-[18px] text-center"
+            style={{ background: theme.colors.glacier500 }}
+          >
             {unreadLabel}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800 z-50">
-          <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3 dark:border-gray-700">
-            <span className="text-sm font-semibold text-stone-800 dark:text-gray-200">
+        <div
+          className="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl shadow-xl z-[100]"
+          style={{
+            background: theme.glass.background,
+            border: theme.glass.border,
+            boxShadow: theme.glass.shadow,
+            borderRadius: theme.radius.md,
+          }}
+        >
+          <div
+            className="flex items-center justify-between border-b px-4 py-3"
+            style={{ borderColor: 'var(--glass-border)' }}
+          >
+            <span className="text-sm font-semibold" style={{ color: theme.colors.textPrimary }}>
               Notifications
             </span>
             {loading && (
-              <span className="text-xs text-stone-400 dark:text-gray-500">Loading...</span>
+              <span className="text-xs" style={{ color: theme.colors.textMuted }}>
+                Loading...
+              </span>
             )}
           </div>
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 && !loading && (
-              <div className="px-4 py-8 text-center text-sm text-stone-500 dark:text-gray-400">
+              <div className="px-4 py-8 text-center text-sm" style={{ color: theme.colors.textMuted }}>
                 No notifications yet.
               </div>
             )}
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`border-b border-stone-100 px-4 py-3 text-sm last:border-b-0 dark:border-gray-700 ${
-                  !notification.readAt
-                    ? 'bg-emerald-50/50 dark:bg-emerald-900/10'
-                    : 'hover:bg-stone-50 dark:hover:bg-gray-700/50'
-                } transition-colors cursor-pointer`}
+                className="border-b px-4 py-3 text-sm last:border-b-0 transition-colors cursor-pointer"
+                style={{
+                  borderColor: 'var(--glass-border)',
+                  background: notification.readAt ? 'transparent' : 'var(--color-frost-50)',
+                }}
               >
-                <p className="font-medium text-stone-800 dark:text-gray-100">
+                <p className="font-medium" style={{ color: theme.colors.textPrimary }}>
                   {notification.title}
                 </p>
-                <p className="mt-1 text-xs text-stone-600 dark:text-gray-400">
+                <p className="mt-1 text-xs" style={{ color: theme.colors.textSecondary }}>
                   {notification.message}
                 </p>
-                <p className="mt-2 text-[11px] text-stone-400 dark:text-gray-500">
+                <p className="mt-2 text-[11px]" style={{ color: theme.colors.textMuted }}>
                   {new Date(notification.createdAt).toLocaleString()}
                 </p>
               </div>

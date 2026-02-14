@@ -92,6 +92,15 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         metadata: { method: "google", email: user.email, role: user.role },
       })
+      // Welcome notification for new user so the notification dropdown shows something
+      await notifyUser({
+        userId: user.id,
+        title: 'Welcome!',
+        message: 'Your account was created with Google. You can now browse competitions and join the community.',
+        type: 'user_registered',
+        entityType: 'user',
+        entityId: user.id,
+      })
     }
 
     await logActivity({
@@ -102,16 +111,17 @@ export async function POST(request: NextRequest) {
       metadata: { method: "google", email: user.email },
     })
 
-    // Send login notification to user
-    const now = new Date()
-    await notifyUser({
-      userId: user.id,
-      title: 'Welcome back!',
-      message: `You signed in via Google at ${now.toLocaleString()}`,
-      type: 'user_logged_in',
-      entityType: 'user',
-      entityId: user.id,
-    })
+    if (!isNewUser) {
+      const now = new Date()
+      await notifyUser({
+        userId: user.id,
+        title: 'Welcome back!',
+        message: `You signed in via Google at ${now.toLocaleString()}`,
+        type: 'user_logged_in',
+        entityType: 'user',
+        entityId: user.id,
+      })
+    }
 
     return NextResponse.json(
       {
