@@ -7,6 +7,8 @@ import { theme } from '@/lib/theme'
 import { Snowfall } from '@/components/ui/Snowfall'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { toast } from '@/components/ui/ToasterProvider'
 
 type Registration = {
   id: number
@@ -15,6 +17,8 @@ type Registration = {
   transactionId: string | null
   paymentSlipUrls: string[]
   rejectionReason: string | null
+  calendarEventId: string | null
+  calendarSynced: boolean
   createdAt: string
   competition: {
     id: number
@@ -30,10 +34,15 @@ type Registration = {
 
 export default function RegistrationsPage() {
   const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [loading, setLoading] = useState(true)
   const [uploadingSlip, setUploadingSlip] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [calendarConnected, setCalendarConnected] = useState(false)
+  const [connectingCalendar, setConnectingCalendar] = useState(false)
+  const [syncingCalendar, setSyncingCalendar] = useState<number | null>(null)
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -43,16 +52,78 @@ export default function RegistrationsPage() {
     }
   }, [authLoading, user])
 
+  // Handle URL params for calendar connection feedback
+  useEffect(() => {
+    const calendarConnected = searchParams.get('calendar_connected')
+    const calendarError = searchParams.get('calendar_error')
+    
+    if (calendarConnected === 'true') {
+      toast.success('Google Calendar connected successfully! ✅')
+      // Clean URL
+      router.replace('/registrations', { scroll: false })
+    }
+    
+    if (calendarError) {
+      toast.error(`Calendar connection failed: ${decodeURIComponent(calendarError)}`)
+      // Clean URL
+      router.replace('/registrations', { scroll: false })
+    }
+  }, [searchParams, router])
+
   const fetchRegistrations = async () => {
     try {
       const response = await fetch('/api/registrations')
       if (!response.ok) throw new Error('Failed to fetch registrations')
       const data = await response.json()
       setRegistrations(data.registrations || [])
+      setCalendarConnected(data.calendarConnected || false)
     } catch (err: any) {
       setError(err.message || 'Failed to load registrations')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleConnectCalendar = async () => {
+    setConnectingCalendar(true)
+    setError(null)
+    
+    try {
+      const response = await fetch('/api/calendar/connect')
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to initiate calendar connection')
+      }
+      
+      const data = await response.json()
+      // Redirect to Google OAuth
+      window.location.href = data.authUrl
+    } catch (err: any) {
+      setError(err.message || 'Failed to connect calendar')
+      setConnectingCalendar(false)
+    }
+  }
+
+  const handleRetrySync = async (registrationId: number) => {
+    setSyncingCalendar(registrationId)
+    setError(null)
+    
+    try {
+      const response = await fetch(`/api/calendar/sync/${registrationId}`, {
+        method: 'POST',
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to sync to calendar')
+      }
+      
+      toast.success('Successfully synced to Google Calendar! ✅')
+      await fetchRegistrations()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to sync to calendar')
+    } finally {
+      setSyncingCalendar(null)
     }
   }
 
@@ -185,6 +256,48 @@ export default function RegistrationsPage() {
               }}
             >
               {error}
+            </div>
+          )}
+
+          {/* Calendar Connection Banner */}
+          {!calendarConnected && (
+            <div
+              className="mb-6 p-4 rounded-lg flex items-center justify-between flex-wrap gap-4"
+              style={{
+                background: `${theme.colors.info || '#3b82f6'}20`,
+                border: `1px solid ${theme.colors.info || '#3b82f6'}`,
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📅</span>
+                <div>
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: theme.colors.info || '#3b82f6' }}
+                  >
+                    Connect Google Calendar
+                  </p>
+                  <p
+                    className="text-xs mt-1"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    Get automatic reminders for your competition deadlines
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleConnectCalendar}
+                disabled={connectingCalendar}
+                className="px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: theme.buttons.primary.background,
+                  color: theme.buttons.primary.color,
+                  borderRadius: theme.buttons.primary.radius,
+                  boxShadow: theme.buttons.primary.shadow,
+                }}
+              >
+                {connectingCalendar ? 'Connecting...' : 'Connect Calendar'}
+              </button>
             </div>
           )}
 
@@ -478,6 +591,59 @@ export default function RegistrationsPage() {
                             />
                           </label>
                         </div>
+
+                        {/* Calendar Sync Status */}
+                        {registration.status === 'approved' && (
+                          <div className="pt-2 border-t" style={{ borderColor: 'var(--glass-border)' }}>
+                            <p
+                              className="text-xs uppercase tracking-wider mb-2"
+                              style={{ color: 'var(--color-text-muted)' }}
+                            >
+                              Google Calendar
+                            </p>
+                            {registration.calendarSynced ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">✅</span>
+                                <p
+                                  className="text-sm"
+                                  style={{ color: theme.colors.success }}
+                                >
+                                  Added to Google Calendar
+                                </p>
+                              </div>
+                            ) : calendarConnected ? (
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">🔁</span>
+                                <div className="flex-1">
+                                  <p
+                                    className="text-sm mb-1"
+                                    style={{ color: 'var(--color-text-secondary)' }}
+                                  >
+                                    Calendar sync failed or pending
+                                  </p>
+                                  <button
+                                    onClick={() => handleRetrySync(registration.id)}
+                                    disabled={syncingCalendar === registration.id}
+                                    className="text-xs font-medium transition-all duration-300 hover:underline disabled:opacity-50"
+                                    style={{ color: theme.colors.info || '#3b82f6' }}
+                                  >
+                                    {syncingCalendar === registration.id ? 'Syncing...' : 'Retry Calendar Sync'}
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">📅</span>
+                                <p
+                                  className="text-sm"
+                                  style={{ color: 'var(--color-text-muted)' }}
+                                >
+                                  Connect Google Calendar to sync events
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

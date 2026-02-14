@@ -3,6 +3,7 @@ import { Resend } from 'resend'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { notifyUser } from '@/lib/activity'
+import { syncRegistrationToCalendar } from '@/lib/calendar/googleCalendar.service'
 
 const resend = new Resend(process.env.RESEND_SECRET_KEY)
 const fromEmail = process.env.RESEND_FROM_EMAIL || 'EstatePro <onboarding@resend.dev>'
@@ -53,6 +54,7 @@ export async function PATCH(
           select: {
             email: true,
             name: true,
+            calendarConnected: true,
           },
         },
       },
@@ -102,6 +104,15 @@ export async function PATCH(
         },
       },
     })
+
+    // If payment is approved, attempt to sync to calendar if user has connected
+    // This is fire-and-forget - calendar failures should not block approval
+    if (action === 'approve' && registration.user.calendarConnected) {
+      syncRegistrationToCalendar(registrationId).catch((err) => {
+        console.error(`Failed to sync registration ${registrationId} to calendar:`, err)
+        // Error is logged but doesn't affect the approval process
+      })
+    }
 
     // Notify user in-app
     if (action === 'approve') {

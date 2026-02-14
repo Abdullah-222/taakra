@@ -32,7 +32,18 @@ export async function GET() {
       },
     })
 
-    return NextResponse.json({ registrations })
+    // Get user's calendar connection status
+    const userWithCalendar = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        calendarConnected: true,
+      },
+    })
+
+    return NextResponse.json({
+      registrations,
+      calendarConnected: userWithCalendar?.calendarConnected || false,
+    })
   } catch (error) {
     console.error('Error fetching registrations:', error)
     return NextResponse.json(
