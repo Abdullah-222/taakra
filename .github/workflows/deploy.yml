@@ -18,5 +18,5 @@ jobs:
           ssh -i ~/ssh_key -o StrictHostKeyChecking=no root@147.182.206.208 << 'EOF'
             cd ~/taakra/http
             git pull origin main
-            echo "Deployed successfully!!!"
+            echo "Deployed successfully!!!!!"
           EOF
