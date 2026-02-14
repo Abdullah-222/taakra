@@ -298,6 +298,7 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
                 isExpired={isExpired}
                 userRegistration={userRegistration}
                 currentUser={currentUser}
+                registrationFee={Number(process.env.NEXT_PUBLIC_STRIPE_REGISTRATION_FEE) || 0}
               />
               <CompetitionChat
                 competitionId={competition.id}

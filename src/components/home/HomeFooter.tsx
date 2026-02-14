@@ -14,7 +14,7 @@ const footerColumns = [
     links: [
       { href: '#about', label: 'About Taakra' },
       { href: '#services', label: 'Services' },
-      { href: '/send-email', label: 'Support Contact' },
+      { href: '/contact', label: 'Contact Us' },
     ],
   },
   {

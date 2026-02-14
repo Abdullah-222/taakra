@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { logActivity, notifyUser } from '@/lib/activity'
@@ -8,6 +9,10 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-10-29.clover',
+})
 
 const BUCKET = 'takra-bucket'
 const PAYMENT_SLIP_PREFIX = 'payment-slips/'
@@ -28,7 +33,129 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid competition ID' }, { status: 400 })
     }
 
-    // Parse FormData
+    const contentType = req.headers.get('content-type') || ''
+
+    // --- Stripe completion (JSON body after successful Stripe Checkout) ---
+    if (contentType.includes('application/json')) {
+      const body = await req.json()
+      const {
+        paymentMethod,
+        stripeSessionId,
+        fullName,
+        email,
+        phone = '',
+        address = '',
+        city = '',
+        state = '',
+        zipCode = '',
+        country = '',
+        additionalInfo = '',
+      } = body
+
+      if (paymentMethod !== 'stripe' || !stripeSessionId || typeof stripeSessionId !== 'string') {
+        return NextResponse.json({ error: 'Invalid request. Missing stripe session.' }, { status: 400 })
+      }
+      if (!fullName || typeof fullName !== 'string' || fullName.trim() === '') {
+        return NextResponse.json({ error: 'Full name is required' }, { status: 400 })
+      }
+      if (!email || typeof email !== 'string' || email.trim() === '') {
+        return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+      }
+
+      const session = await stripe.checkout.sessions.retrieve(stripeSessionId)
+      if (session.payment_status !== 'paid') {
+        return NextResponse.json({ error: 'Payment not completed. Please complete payment first.' }, { status: 400 })
+      }
+      const meta = session.metadata || {}
+      if (String(meta.competitionId) !== String(competitionId) || String(meta.userId) !== String(user.id)) {
+        return NextResponse.json({ error: 'Session does not match this competition or user.' }, { status: 400 })
+      }
+
+      const competition = await prisma.competition.findUnique({ where: { id: competitionId } })
+      if (!competition) {
+        return NextResponse.json({ error: 'Competition not found' }, { status: 404 })
+      }
+      if (competition.status !== 'published') {
+        return NextResponse.json({ error: 'Competition is not available for registration' }, { status: 400 })
+      }
+      if (new Date(competition.deadline) < new Date()) {
+        return NextResponse.json({ error: 'Registration deadline has passed' }, { status: 400 })
+      }
+
+      const existingRegistration = await prisma.competitionRegistration.findUnique({
+        where: {
+          competitionId_userId: { competitionId, userId: user.id },
+        },
+      })
+      if (existingRegistration) {
+        return NextResponse.json({ error: 'You have already registered for this competition' }, { status: 400 })
+      }
+
+      const registration = await prisma.competitionRegistration.create({
+        data: {
+          competitionId,
+          userId: user.id,
+          transactionId: session.id,
+          status: 'approved',
+          paymentStatus: 'approved',
+          paymentSlipUrls: [],
+        },
+        include: {
+          competition: { select: { title: true } },
+        },
+      })
+
+      await prisma.competition.update({
+        where: { id: competitionId },
+        data: { registrationCount: { increment: 1 } },
+      })
+
+      const registrationMetadata = {
+        fullName: (fullName as string).trim(),
+        email: (email as string).trim(),
+        phone: (phone as string)?.trim() || null,
+        address: (address as string)?.trim() || null,
+        city: (city as string)?.trim() || null,
+        state: (state as string)?.trim() || null,
+        zipCode: (zipCode as string)?.trim() || null,
+        country: (country as string)?.trim() || null,
+        additionalInfo: (additionalInfo as string)?.trim() || null,
+      }
+
+      await logActivity({
+        action: 'competition_registered',
+        entityType: 'competition',
+        entityId: competitionId,
+        userId: user.id,
+        metadata: JSON.stringify({
+          competitionTitle: competition.title,
+          transactionId: session.id,
+          paymentMethod: 'stripe',
+          ...registrationMetadata,
+        }),
+      })
+
+      await notifyUser({
+        userId: user.id,
+        title: 'Registration complete ❄️',
+        message: `Your registration for "${competition.title}" is confirmed. Payment received via Stripe.`,
+        type: 'competition_registered',
+        entityType: 'competition',
+        entityId: competitionId,
+      })
+
+      return NextResponse.json({
+        message: 'Registration successful',
+        registration: {
+          id: registration.id,
+          status: registration.status,
+          paymentStatus: registration.paymentStatus,
+          createdAt: registration.createdAt,
+        },
+      })
+    }
+
+    // --- Payment slip flow (FormData) ---
     const formData = await req.formData()
     const transactionId = formData.get('transactionId') as string
     const fullName = formData.get('fullName') as string

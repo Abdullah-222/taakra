@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { theme } from '@/lib/theme'
 import Link from 'next/link'
@@ -24,6 +24,12 @@ type CompetitionRegistrationFormProps = {
     email: string
     name?: string | null
   } | null
+  /** Registration fee in dollars for Stripe (0 = free). Set via NEXT_PUBLIC_STRIPE_REGISTRATION_FEE. */
+  registrationFee?: number
+}
+
+function pendingFormStorageKey(competitionId: number): string {
+  return `competition-stripe-pending-${competitionId}`
 }
 
 export function CompetitionRegistrationForm({
@@ -33,9 +39,12 @@ export function CompetitionRegistrationForm({
   isExpired,
   userRegistration,
   currentUser,
+  registrationFee = 0,
 }: CompetitionRegistrationFormProps) {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [paymentMethod, setPaymentMethod] = useState<'slip' | 'stripe'>('slip')
   const [formData, setFormData] = useState({
     fullName: currentUser?.name || '',
     email: currentUser?.email || '',
@@ -53,6 +62,60 @@ export function CompetitionRegistrationForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [stripeRedirecting, setStripeRedirecting] = useState(false)
+
+  // After Stripe success: complete registration with saved form data
+  useEffect(() => {
+    const stripeSuccess = searchParams.get('stripe') === 'success'
+    const sessionId = searchParams.get('session_id')
+    if (!stripeSuccess || !sessionId || success || userRegistration) return
+
+    const raw = typeof window !== 'undefined' ? sessionStorage.getItem(pendingFormStorageKey(competitionId)) : null
+    if (!raw) return
+
+    let pending: Record<string, string>
+    try {
+      pending = JSON.parse(raw)
+    } catch {
+      return
+    }
+
+    const completeStripeRegistration = async () => {
+      setError(null)
+      setIsSubmitting(true)
+      try {
+        const response = await fetch(`/api/competitions/${competitionId}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentMethod: 'stripe',
+            stripeSessionId: sessionId,
+            fullName: pending.fullName ?? '',
+            email: pending.email ?? '',
+            phone: pending.phone ?? '',
+            address: pending.address ?? '',
+            city: pending.city ?? '',
+            state: pending.state ?? '',
+            zipCode: pending.zipCode ?? '',
+            country: pending.country ?? '',
+            additionalInfo: pending.additionalInfo ?? '',
+          }),
+        })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error || 'Failed to complete registration')
+        sessionStorage.removeItem(pendingFormStorageKey(competitionId))
+        setSuccess(true)
+        router.replace(`/competitions/${competitionId}`, { scroll: false })
+        router.refresh()
+      } catch (e: any) {
+        setError(e.message || 'Could not complete registration')
+      } finally {
+        setIsSubmitting(false)
+      }
+    }
+
+    completeStripeRegistration()
+  }, [competitionId, searchParams, success, userRegistration, router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -96,25 +159,23 @@ export function CompetitionRegistrationForm({
     setError(null)
     setSuccess(false)
 
-    // Validation
-    if (!formData.transactionId.trim()) {
-      setError('Transaction ID is required')
-      return
-    }
-
     if (!formData.fullName.trim()) {
       setError('Full name is required')
       return
     }
-
     if (!formData.email.trim()) {
       setError('Email is required')
       return
     }
-
-    if (!paymentSlip) {
-      setError('Payment slip is required')
-      return
+    if (paymentMethod === 'slip') {
+      if (!formData.transactionId.trim()) {
+        setError('Transaction ID is required for payment slip')
+        return
+      }
+      if (!paymentSlip) {
+        setError('Payment slip is required')
+        return
+      }
     }
 
     setIsSubmitting(true)
@@ -678,7 +739,46 @@ export function CompetitionRegistrationForm({
           </div>
         </div>
 
-        {/* Payment Information */}
+        {/* Payment method */}
+        <div className="space-y-4 pt-2 border-t" style={{ borderColor: 'var(--glass-border)' }}>
+          <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+            Payment method *
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="paymentMethod"
+                checked={paymentMethod === 'slip'}
+                onChange={() => setPaymentMethod('slip')}
+                disabled={isSubmitting || success}
+                className="w-4 h-4"
+                style={{ accentColor: theme.colors.glacier500 }}
+              />
+              <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                Bank transfer / upload payment slip
+              </span>
+            </label>
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="paymentMethod"
+                checked={paymentMethod === 'stripe'}
+                onChange={() => setPaymentMethod('stripe')}
+                disabled={isSubmitting || success}
+                className="w-4 h-4"
+                style={{ accentColor: theme.colors.glacier500 }}
+              />
+              <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                Pay with card (Stripe)
+              </span>
+            </label>
+          </div>
+        </div>
+
+        {/* Payment slip fields (only when payment method = slip) */}
+        {paymentMethod === 'slip' && (
+        <>
         <div className="space-y-4 pt-2 border-t" style={{ borderColor: 'var(--glass-border)' }}>
           <div>
             <label
@@ -695,7 +795,7 @@ export function CompetitionRegistrationForm({
               value={formData.transactionId}
               onChange={handleInputChange}
               placeholder="Enter your payment transaction ID"
-              required
+              required={paymentMethod === 'slip'}
               disabled={isSubmitting || success}
               className="w-full px-4 py-2.5 text-sm transition-all duration-300 focus:outline-none"
               style={{
@@ -768,7 +868,7 @@ export function CompetitionRegistrationForm({
                   type="file"
                   accept="image/*,.pdf"
                   onChange={handleFileChange}
-                  required
+                  required={paymentMethod === 'slip'}
                   disabled={isSubmitting || success}
                   className="hidden"
                 />
@@ -802,6 +902,8 @@ export function CompetitionRegistrationForm({
             </div>
           </div>
         </div>
+        </>
+        )}
 
         {/* Additional Information */}
         <div className="pt-2 border-t" style={{ borderColor: 'var(--glass-border)' }}>
@@ -838,19 +940,72 @@ export function CompetitionRegistrationForm({
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting || success}
-          className="w-full px-6 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            background: isSubmitting || success ? 'var(--glass-bg)' : theme.buttons.primary.background,
-            color: theme.buttons.primary.color,
-            borderRadius: theme.buttons.primary.radius,
-            boxShadow: isSubmitting || success ? 'none' : theme.buttons.primary.shadow,
-          }}
-        >
-          {isSubmitting ? 'Registering...' : success ? 'Registered! ❄️' : 'Submit Registration'}
-        </button>
+        {paymentMethod === 'slip' ? (
+          <button
+            type="submit"
+            disabled={isSubmitting || success}
+            className="w-full px-6 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: isSubmitting || success ? 'var(--glass-bg)' : theme.buttons.primary.background,
+              color: theme.buttons.primary.color,
+              borderRadius: theme.buttons.primary.radius,
+              boxShadow: isSubmitting || success ? 'none' : theme.buttons.primary.shadow,
+            }}
+          >
+            {isSubmitting ? 'Registering...' : success ? 'Registered! ❄️' : 'Submit Registration'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={isSubmitting || success || stripeRedirecting}
+            onClick={async () => {
+              if (!formData.fullName.trim()) { setError('Full name is required'); return }
+              if (!formData.email.trim()) { setError('Email is required'); return }
+              setError(null)
+              setStripeRedirecting(true)
+              try {
+                sessionStorage.setItem(pendingFormStorageKey(competitionId), JSON.stringify({
+                  fullName: formData.fullName,
+                  email: formData.email,
+                  phone: formData.phone,
+                  address: formData.address,
+                  city: formData.city,
+                  state: formData.state,
+                  zipCode: formData.zipCode,
+                  country: formData.country,
+                  additionalInfo: formData.additionalInfo,
+                }))
+                const res = await fetch('/api/stripe/create-checkout', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    amount: Number(registrationFee) || 0,
+                    currency: 'usd',
+                    productName: `Registration: ${competitionTitle}`,
+                    competitionId,
+                  }),
+                })
+                const data = await res.json()
+                if (!res.ok) throw new Error(data.error || 'Could not start checkout')
+                if (data.url) window.location.href = data.url
+                else setError('No checkout URL received')
+              } catch (e: any) {
+                setError(e.message || 'Failed to open Stripe checkout')
+              } finally {
+                setStripeRedirecting(false)
+              }
+            }}
+            className="w-full px-6 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: stripeRedirecting || isSubmitting || success ? 'var(--glass-bg)' : theme.buttons.primary.background,
+              color: theme.buttons.primary.color,
+              borderRadius: theme.buttons.primary.radius,
+              boxShadow: stripeRedirecting || isSubmitting || success ? 'none' : theme.buttons.primary.shadow,
+            }}
+          >
+            {stripeRedirecting ? 'Redirecting to Stripe...' : 'Pay with Stripe'}
+          </button>
+        )}
       </form>
     </div>
   )
