@@ -8,20 +8,41 @@ import { useAuth } from '@/hooks/useAuth'
 import { UserNotificationsBell } from '@/components/notifications/UserNotificationsBell'
 
 const primaryLinks = [
+  { href: '/', label: 'Home' },
   { href: '/competitions', label: 'Competitions' },
   { href: '/chat', label: 'Community' },
   { href: '/meeting', label: 'Meetings' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/support', label: 'Support' },
   { href: '/registrations', label: 'Registrations' },
+  { href: '/contact', label: 'Contact' },
 ]
 
 export function Navbar() {
   const { theme: currentTheme, setTheme } = useTheme()
   const { user, loading, logout } = useAuth()
   const [mounted, setMounted] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    let ticking = false
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY
+          setIsScrolled(scrollY > 20)
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   const toggleTheme = () => {
@@ -29,9 +50,20 @@ export function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 mx-2 mt-2 sm:mx-4 sm:mt-4 flex flex-col gap-0 rounded-xl sm:rounded-2xl transition-all duration-300" style={{ boxShadow: theme.glass.shadow }}>
+    <header 
+      className="fixed top-0 left-0 right-0 z-50 flex flex-col gap-0 rounded-xl sm:rounded-2xl overflow-hidden will-change-transform"
+      style={{ 
+        boxShadow: theme.glass.shadow,
+        margin: isScrolled ? '4px 8px' : '8px 16px',
+        marginTop: isScrolled ? '4px' : '8px',
+        transform: isScrolled ? 'scale(0.98)' : 'scale(1)',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      }}
+    >
       <nav
-        className="flex items-center justify-between gap-2 px-3 py-2.5 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl min-h-0 overflow-visible"
+        className={`flex items-center justify-between gap-2 rounded-xl sm:rounded-2xl min-h-0 transition-all duration-300 glass-animated ${
+          isScrolled ? 'px-2.5 py-2 sm:px-4 sm:py-3' : 'px-3 py-2.5 sm:px-6 sm:py-4'
+        }`}
         style={{
           background: theme.glass.background,
           backdropFilter: theme.glass.blur,
@@ -40,14 +72,36 @@ export function Navbar() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group min-w-0 shrink">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-all">
+          <div 
+            className="rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold shadow-md group-hover:shadow-lg will-change-[width,height,font-size]"
+            style={{
+              width: isScrolled ? '28px' : '32px',
+              height: isScrolled ? '28px' : '32px',
+              fontSize: isScrolled ? '16px' : '18px',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
             ❄️
           </div>
           <div className="min-w-0">
-            <span className="font-bold text-base sm:text-lg block leading-tight truncate" style={{ color: theme.colors.textPrimary }}>
-              EstatePro
+            <span 
+              className="font-bold block leading-tight truncate will-change-[font-size]"
+              style={{ 
+                color: theme.colors.textPrimary,
+                fontSize: isScrolled ? '14px' : '16px',
+                transition: 'font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+            >
+              TAAKRA
             </span>
-            <span className="text-[10px] uppercase tracking-wider hidden sm:block truncate" style={{ color: theme.colors.textMuted }}>
+            <span 
+              className="uppercase tracking-wider hidden sm:block truncate will-change-[font-size]"
+              style={{ 
+                color: theme.colors.textMuted,
+                fontSize: isScrolled ? '9px' : '10px',
+                transition: 'font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+            >
               Competitions &amp; Community
             </span>
           </div>

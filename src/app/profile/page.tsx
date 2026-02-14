@@ -8,6 +8,7 @@ import { HomeFooter } from '@/components/home/HomeFooter'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from '@/components/ui/ToasterProvider'
 import { theme } from '@/lib/theme'
+import { AIRecommendations } from '@/components/ai/AIRecommendations'
 
 type User = { id: number; email: string; name: string | null; role: string; imageUrl?: string | null }
 
@@ -489,17 +490,24 @@ export default function ProfilePage() {
 
           {/* Registered Competitions - always visible when on profile tab */}
           {activeTab === 'profile' && (
-            <section className="mt-8">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: theme.colors.textPrimary }}>
-                    <span className="text-2xl" aria-hidden>❄️</span>
-                    Your competition snowflakes
-                  </h2>
-                  <p className="text-sm mt-0.5" style={{ color: theme.colors.textMuted }}>
-                    Competitions you&apos;ve registered for — track status and deadlines
-                  </p>
-                </div>
+            <>
+              {/* AI Recommendations */}
+              <section className="mt-8">
+                <AIRecommendations />
+              </section>
+
+              {/* User Registrations */}
+              <section className="mt-8">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: theme.colors.textPrimary }}>
+                      <span className="text-2xl" aria-hidden>❄️</span>
+                      Your competition snowflakes
+                    </h2>
+                    <p className="text-sm mt-0.5" style={{ color: theme.colors.textMuted }}>
+                      Competitions you&apos;ve registered for — track status and deadlines
+                    </p>
+                  </div>
                 {registrations.length > 0 && (
                   <Link
                     href="/registrations"

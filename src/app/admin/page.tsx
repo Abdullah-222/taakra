@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { AIInsights } from '@/components/admin/AIInsights'
+import { theme } from '@/lib/theme'
 
 export default async function AdminDashboardPage() {
   const [totalProperties, recentProperties, recentActivities] =
@@ -73,40 +75,68 @@ export default async function AdminDashboardPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-8" style={{ background: 'var(--background)' }}>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900 dark:text-white mb-1">
+          <h1 
+            className="text-2xl font-bold mb-1"
+            style={{ color: theme.colors.textPrimary }}
+          >
             Dashboard
           </h1>
-          <p className="text-stone-600 dark:text-gray-400">
+          <p style={{ color: theme.colors.textMuted }}>
             Recent activity and quick overview.
           </p>
         </div>
         <Link
           href="/admin/analytics"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold shadow-sm transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all duration-300 hover:scale-105"
+          style={{
+            background: theme.buttons.primary.background,
+            color: theme.buttons.primary.color,
+            borderRadius: theme.radius.md,
+          }}
         >
           <span>📈</span>
           <span>View Analytics</span>
         </Link>
       </div>
 
+      {/* AI Insights */}
+      <div className="mb-6">
+        <AIInsights />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 border border-stone-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
+        <div 
+          className="rounded-xl p-6 glass-animated transition-all duration-300 hover:scale-[1.01]"
+          style={{
+            background: theme.glass.background,
+            border: theme.glass.border,
+            boxShadow: theme.glass.shadow,
+            backdropFilter: theme.glass.blur,
+          }}
+        >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-stone-900 dark:text-white">
+            <h2 
+              className="text-lg font-semibold"
+              style={{ color: theme.colors.textPrimary }}
+            >
               Recent Activity
             </h2>
             <Link
               href="/admin/analytics"
-              className="text-xs text-emerald-700 dark:text-emerald-400 hover:underline"
+              className="text-xs hover:underline transition-all duration-200"
+              style={{ color: theme.colors.success }}
             >
               View all
             </Link>
           </div>
           {recentActivities.length === 0 ? (
-            <p className="text-sm text-stone-500 dark:text-gray-400">
+            <p 
+              className="text-sm"
+              style={{ color: theme.colors.textMuted }}
+            >
               No recent activity
             </p>
           ) : (
@@ -118,25 +148,41 @@ export default async function AdminDashboardPage() {
                 return (
                   <div
                     key={activity.id}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-stone-50 dark:bg-gray-900/50 border border-stone-200 dark:border-gray-700"
+                    className="flex items-start gap-3 p-3 rounded-lg transition-all duration-200 hover:scale-[1.01]"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: theme.glass.border,
+                    }}
                   >
                     <div className="text-xl">{getActivityIcon(activity.action)}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-medium text-stone-900 dark:text-white">
+                        <p 
+                          className="text-sm font-medium"
+                          style={{ color: theme.colors.textPrimary }}
+                        >
                           {formatActivityAction(activity.action)}
                         </p>
-                        <span className="text-xs text-stone-500 dark:text-gray-400">
+                        <span 
+                          className="text-xs"
+                          style={{ color: theme.colors.textMuted }}
+                        >
                           {formatTimeAgo(activity.createdAt)}
                         </span>
                       </div>
                       {activity.user && (
-                        <p className="text-xs text-stone-600 dark:text-gray-400">
+                        <p 
+                          className="text-xs"
+                          style={{ color: theme.colors.textSecondary }}
+                        >
                           by {activity.user.email}
                         </p>
                       )}
                       {metadata.title && (
-                        <p className="text-xs text-stone-500 dark:text-gray-500 mt-1">
+                        <p 
+                          className="text-xs mt-1"
+                          style={{ color: theme.colors.textMuted }}
+                        >
                           {metadata.title}
                         </p>
                       )}
@@ -148,20 +194,35 @@ export default async function AdminDashboardPage() {
           )}
         </div>
 
-        <div className="bg-white dark:bg-gray-800 border border-stone-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
+        <div 
+          className="rounded-xl p-6 glass-animated transition-all duration-300 hover:scale-[1.01]"
+          style={{
+            background: theme.glass.background,
+            border: theme.glass.border,
+            boxShadow: theme.glass.shadow,
+            backdropFilter: theme.glass.blur,
+          }}
+        >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-stone-900 dark:text-white">
+            <h2 
+              className="text-lg font-semibold"
+              style={{ color: theme.colors.textPrimary }}
+            >
               Recent Properties
             </h2>
             <Link
               href="/admin/competitions"
-              className="text-xs text-emerald-700 dark:text-emerald-400 hover:underline"
+              className="text-xs hover:underline transition-all duration-200"
+              style={{ color: theme.colors.success }}
             >
               View all ({totalProperties})
             </Link>
           </div>
           {recentProperties.length === 0 ? (
-            <p className="text-sm text-stone-500 dark:text-gray-400">
+            <p 
+              className="text-sm"
+              style={{ color: theme.colors.textMuted }}
+            >
               No properties yet
             </p>
           ) : (
@@ -170,17 +231,36 @@ export default async function AdminDashboardPage() {
                 <Link
                   key={property.id}
                   href={`/competitions/${property.id}`}
-                  className="flex items-start gap-3 p-3 rounded-lg bg-stone-50 dark:bg-gray-900/50 border border-stone-200 dark:border-gray-700 hover:bg-stone-100 dark:hover:bg-gray-800 transition-colors"
+                  className="flex items-start gap-3 p-3 rounded-lg transition-all duration-200 hover:scale-[1.01]"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: theme.glass.border,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
+                  }}
                 >
                   <div className="text-xl">🏠</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-stone-900 dark:text-white mb-1">
+                    <p 
+                      className="text-sm font-medium mb-1"
+                      style={{ color: theme.colors.textPrimary }}
+                    >
                       {property.title}
                     </p>
-                    <p className="text-xs text-stone-600 dark:text-gray-400">
+                    <p 
+                      className="text-xs"
+                      style={{ color: theme.colors.textSecondary }}
+                    >
                       📍 {property.location} • {property.price}
                     </p>
-                    <p className="text-xs text-stone-500 dark:text-gray-500 mt-1">
+                    <p 
+                      className="text-xs mt-1"
+                      style={{ color: theme.colors.textMuted }}
+                    >
                       {formatDate(property.createdAt)}
                     </p>
                   </div>
@@ -191,35 +271,90 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="mt-6 bg-white dark:bg-gray-800 border border-stone-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-stone-900 dark:text-white mb-4">
+      <div 
+        className="mt-6 rounded-xl p-6 glass-animated transition-all duration-300"
+        style={{
+          background: theme.glass.background,
+          border: theme.glass.border,
+          boxShadow: theme.glass.shadow,
+          backdropFilter: theme.glass.blur,
+        }}
+      >
+        <h2 
+          className="text-lg font-semibold mb-4"
+          style={{ color: theme.colors.textPrimary }}
+        >
           Quick Actions
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Link
             href="/admin/competitions/new"
-            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
+            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105"
+            style={{
+              background: 'rgba(16, 185, 129, 0.15)',
+              border: `1px solid ${theme.colors.success}40`,
+              color: theme.colors.success,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(16, 185, 129, 0.25)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)'
+            }}
           >
             <span className="text-2xl">➕</span>
             <span className="text-xs font-medium text-center">New Competition</span>
           </Link>
           <Link
             href="/admin/competitions"
-            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg bg-stone-50 dark:bg-gray-900/50 text-stone-700 dark:text-gray-300 hover:bg-stone-100 dark:hover:bg-gray-800 transition-colors"
+            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105"
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: theme.glass.border,
+              color: theme.colors.textSecondary,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
+            }}
           >
             <span className="text-2xl">❄️</span>
             <span className="text-xs font-medium text-center">Competitions</span>
           </Link>
           <Link
             href="/admin/users"
-            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg bg-stone-50 dark:bg-gray-900/50 text-stone-700 dark:text-gray-300 hover:bg-stone-100 dark:hover:bg-gray-800 transition-colors"
+            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105"
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: theme.glass.border,
+              color: theme.colors.textSecondary,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
+            }}
           >
             <span className="text-2xl">👥</span>
             <span className="text-xs font-medium text-center">Users</span>
           </Link>
           <Link
             href="/admin/analytics"
-            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg bg-stone-50 dark:bg-gray-900/50 text-stone-700 dark:text-gray-300 hover:bg-stone-100 dark:hover:bg-gray-800 transition-colors"
+            className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105"
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: theme.glass.border,
+              color: theme.colors.textSecondary,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'
+            }}
           >
             <span className="text-2xl">📈</span>
             <span className="text-xs font-medium text-center">Analytics</span>

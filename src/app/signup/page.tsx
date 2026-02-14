@@ -131,7 +131,7 @@ export default function SignupPage() {
 
       {/* Footer / Copyright */}
       <footer className="w-full py-6 text-center text-xs relative z-10" style={{ color: theme.colors.textMuted }}>
-        &copy; {new Date().getFullYear()} EstatePro. Crafted with ❄️ by Taakra.
+        &copy; {new Date().getFullYear()} TAAKRA. Crafted with ❄️ by Taakra.
       </footer>
     </div>
   )

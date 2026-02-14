@@ -11,6 +11,8 @@ import { prisma } from '@/lib/prisma'
 import { theme } from '@/lib/theme'
 import { Snowfall } from '@/components/ui/Snowfall'
 import { CompetitionRegistrationForm } from './CompetitionRegistrationForm'
+import { RuleSimplifier } from '@/components/ai/RuleSimplifier'
+import { PrepGuide } from '@/components/ai/PrepGuide'
 
 // Lazy load CompetitionChat - it's heavy with socket.io
 const CompetitionChat = dynamic(
@@ -190,56 +192,19 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
                 {/* Rules of competition */}
                 {competition.rules && competition.rules.trim() && (
                   <div className="mb-6 pt-6 border-t" style={{ borderColor: 'var(--glass-border)' }}>
-                    <p
-                      className="text-xs uppercase tracking-wider mb-2"
-                      style={{ color: 'var(--color-text-muted)' }}
-                    >
-                      Rules of competition
-                    </p>
-                    <div
-                      className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none"
-                      style={{ color: 'var(--color-text-secondary)' }}
-                    >
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          p: ({ children }) => <p className="my-2 first:mt-0 last:mb-0">{children}</p>,
-                          ul: ({ children }) => <ul className="my-2 pl-5 list-disc space-y-1">{children}</ul>,
-                          ol: ({ children }) => <ol className="my-2 pl-5 list-decimal space-y-1">{children}</ol>,
-                          li: ({ children }) => <li className="my-0.5">{children}</li>,
-                          strong: ({ children }) => <strong className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>{children}</strong>,
-                          h1: ({ children }) => <h1 className="text-lg font-bold mt-4 mb-2 first:mt-0" style={{ color: 'var(--color-text-primary)' }}>{children}</h1>,
-                          h2: ({ children }) => <h2 className="text-base font-bold mt-3 mb-2 first:mt-0" style={{ color: 'var(--color-text-primary)' }}>{children}</h2>,
-                          h3: ({ children }) => <h3 className="text-sm font-semibold mt-2 mb-1 first:mt-0" style={{ color: 'var(--color-text-primary)' }}>{children}</h3>,
-                          code: ({ children }) => (
-                            <code
-                              className="px-1.5 py-0.5 rounded text-[0.85em]"
-                              style={{ 
-                                background: 'rgba(255, 255, 255, 0.1)',
-                                color: 'var(--color-text-primary)'
-                              }}
-                            >
-                              {children}
-                            </code>
-                          ),
-                          a: ({ href, children }) => (
-                            <a
-                              href={href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="underline opacity-90 hover:opacity-100"
-                              style={{ color: 'var(--color-glacier-500)' }}
-                            >
-                              {children}
-                            </a>
-                          ),
-                        }}
-                      >
-                        {competition.rules}
-                      </ReactMarkdown>
-                    </div>
+                    <RuleSimplifier rules={competition.rules} competitionTitle={competition.title} />
                   </div>
                 )}
+
+                {/* AI Preparation Guide */}
+                <div className="mb-6 pt-6 border-t" style={{ borderColor: 'var(--glass-border)' }}>
+                  <PrepGuide
+                    title={competition.title}
+                    description={competition.description}
+                    category={competition.category}
+                    rules={competition.rules}
+                  />
+                </div>
 
                 {/* Tags */}
                 {competition.tags && competition.tags.length > 0 && (

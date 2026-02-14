@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { title, description, rules, category, subcategory, deadline, prize, tags, images, videos, status } = body
+    const { title, description, rules, category, subcategory, deadline, prize, tags, images, videos, status, difficulty } = body
 
     // Validation
     if (!title || !description || !category || !deadline || !prize) {
@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
         images: images || [],
         videos: videos || [],
         status: status || 'draft',
+        difficulty: difficulty || null,
         createdById: user.id,
         registrationCount: 0,
       },

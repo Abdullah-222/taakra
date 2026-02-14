@@ -4,7 +4,7 @@ import { FormEvent, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
-import { theme } from '../../../../../theme'
+import { theme } from '@/lib/theme'
 import { toast } from '@/components/ui/ToasterProvider'
 import { supabase } from '@/lib/supabase'
 import { MediaDropzone } from '@/components/admin/MediaDropzone'
@@ -36,6 +36,10 @@ export default function AdminNewCompetitionPage() {
   const [isUploadingImages, setIsUploadingImages] = useState(false)
   const [isUploadingVideos, setIsUploadingVideos] = useState(false)
   const [isGeneratingRules, setIsGeneratingRules] = useState(false)
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
+  const [isAutoAssigning, setIsAutoAssigning] = useState(false)
+  const [isEstimatingDifficulty, setIsEstimatingDifficulty] = useState(false)
+  const [difficulty, setDifficulty] = useState<'Beginner' | 'Intermediate' | 'Advanced' | ''>('')
 
   const isSubmitting = state === 'saving'
   const glowEffect = currentTheme === 'dark' ? theme.glow.strong : '0 0 20px rgba(54, 158, 255, 0.2)'
@@ -108,6 +112,121 @@ export default function AdminNewCompetitionPage() {
       toast.error('Failed to generate rules. Please try again.')
     } finally {
       setIsGeneratingRules(false)
+    }
+  }
+
+  async function handleGenerateDescription() {
+    if (!title.trim() || !category.trim() || !prize.trim() || !deadline) {
+      toast.error('Please fill in title, category, prize, and deadline before generating description.')
+      return
+    }
+
+    setIsGeneratingDescription(true)
+    try {
+      const response = await fetch('/api/ai/generate-description', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          category,
+          prize,
+          deadline,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.description) {
+        setDescription(data.description)
+        toast.success('Description generated successfully! ✨')
+      } else {
+        toast.error(data.error || 'Failed to generate description. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error generating description:', error)
+      toast.error('Failed to generate description. Please try again.')
+    } finally {
+      setIsGeneratingDescription(false)
+    }
+  }
+
+  async function handleAutoAssign() {
+    if (!title.trim() || !description.trim()) {
+      toast.error('Please fill in title and description before auto-assigning.')
+      return
+    }
+
+    setIsAutoAssigning(true)
+    try {
+      const response = await fetch('/api/ai/auto-assign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        if (data.category) setCategory(data.category)
+        if (data.tags && data.tags.length > 0) setTags(data.tags)
+        if (data.difficulty) {
+          setDifficulty(data.difficulty)
+          toast.success(`Auto-assigned: ${data.category}${data.tags ? `, ${data.tags.length} tags` : ''}, ${data.difficulty}`)
+        } else {
+          toast.success(`Auto-assigned: ${data.category}${data.tags ? `, ${data.tags.length} tags` : ''}`)
+        }
+      } else {
+        toast.error(data.error || 'Failed to auto-assign metadata.')
+      }
+    } catch (error) {
+      console.error('Error auto-assigning:', error)
+      toast.error('Failed to auto-assign metadata.')
+    } finally {
+      setIsAutoAssigning(false)
+    }
+  }
+
+  async function handleEstimateDifficulty() {
+    if (!title.trim() || !description.trim() || !category.trim()) {
+      toast.error('Please fill in title, description, and category before estimating difficulty.')
+      return
+    }
+
+    setIsEstimatingDifficulty(true)
+    try {
+      const response = await fetch('/api/ai/difficulty', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          category,
+          rules: rules || undefined,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.difficulty) {
+        setDifficulty(data.difficulty)
+        toast.success(`Estimated difficulty: ${data.difficulty}`)
+      } else {
+        toast.error(data.error || 'Failed to estimate difficulty.')
+      }
+    } catch (error) {
+      console.error('Error estimating difficulty:', error)
+      toast.error('Failed to estimate difficulty.')
+    } finally {
+      setIsEstimatingDifficulty(false)
     }
   }
 
@@ -233,6 +352,7 @@ export default function AdminNewCompetitionPage() {
           images: imageUploads.map((img) => img.url),
           videos: videoUploads.map((vid) => vid.url),
           status,
+          difficulty: difficulty || null,
         }),
       })
 
@@ -327,13 +447,40 @@ export default function AdminNewCompetitionPage() {
 
           {/* Description */}
           <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium mb-2"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              Description <span style={{ color: theme.colors.danger }}>*</span>
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium"
+                style={{ color: 'var(--color-text-primary)' }}
+              >
+                Description <span style={{ color: theme.colors.danger }}>*</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleGenerateDescription}
+                disabled={isSubmitting || isGeneratingDescription || !title.trim() || !category.trim() || !prize.trim() || !deadline}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: isGeneratingDescription
+                    ? 'rgba(59, 130, 246, 0.3)'
+                    : theme.buttons.primary.background,
+                  color: theme.buttons.primary.color,
+                  borderRadius: theme.radius.sm,
+                }}
+              >
+                {isGeneratingDescription ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🤖</span>
+                    <span>Generate with AI</span>
+                  </>
+                )}
+              </button>
+            </div>
             <textarea
               id="description"
               value={description}
@@ -431,13 +578,41 @@ export default function AdminNewCompetitionPage() {
           {/* Category and Subcategory */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label
-                htmlFor="category"
-                className="block text-sm font-medium mb-2"
-                style={{ color: 'var(--color-text-primary)' }}
-              >
-                Category <span style={{ color: theme.colors.danger }}>*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="category"
+                  className="block text-sm font-medium"
+                  style={{ color: 'var(--color-text-primary)' }}
+                >
+                  Category <span style={{ color: theme.colors.danger }}>*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAutoAssign}
+                  disabled={isSubmitting || isAutoAssigning || !title.trim() || !description.trim()}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: isAutoAssigning
+                      ? 'rgba(59, 130, 246, 0.3)'
+                      : theme.buttons.primary.background,
+                    color: theme.buttons.primary.color,
+                    borderRadius: theme.radius.sm,
+                  }}
+                  title="Auto-assign category, tags, and difficulty"
+                >
+                  {isAutoAssigning ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      <span>Assigning...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>🤖</span>
+                      <span>Auto-Assign</span>
+                    </>
+                  )}
+                </button>
+              </div>
               <select
                 id="category"
                 value={category}

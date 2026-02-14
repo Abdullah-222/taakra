@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useTheme } from 'next-themes'
 import { createPusherClient } from '@/lib/pusher/client'
 import { theme } from '@/lib/theme'
 
@@ -17,11 +19,16 @@ type NotificationItem = {
 }
 
 export function UserNotificationsBell({ userId }: { userId: number }) {
+  const { theme: currentTheme } = useTheme()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const buttonRef = useRef<HTMLButtonElement | null>(null)
+  const dropdownRef = useRef<HTMLDivElement | null>(null)
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 })
+  const [mounted, setMounted] = useState(false)
 
   const unreadLabel = useMemo(() => {
     if (unreadCount <= 0) return '0'
@@ -71,15 +78,48 @@ export function UserNotificationsBell({ userId }: { userId: number }) {
   }, [userId])
 
   useEffect(() => {
-    const handler = (event: MouseEvent) => {
-      if (!containerRef.current) return
-      if (!containerRef.current.contains(event.target as Node)) {
-        setOpen(false)
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    const updatePosition = () => {
+      if (buttonRef.current && open) {
+        const rect = buttonRef.current.getBoundingClientRect()
+        setDropdownPosition({
+          top: rect.bottom + window.scrollY + 8,
+          right: window.innerWidth - rect.right,
+        })
       }
     }
-    document.addEventListener('mousedown', handler)
+
+    if (open) {
+      updatePosition()
+      window.addEventListener('scroll', updatePosition, true)
+      window.addEventListener('resize', updatePosition)
+    }
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
+    }
+  }, [open])
+
+  useEffect(() => {
+    const handler = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (
+        containerRef.current?.contains(target) ||
+        dropdownRef.current?.contains(target)
+      ) {
+        return
+      }
+      setOpen(false)
+    }
+    if (open) {
+      document.addEventListener('mousedown', handler)
+    }
     return () => document.removeEventListener('mousedown', handler)
-  }, [])
+  }, [open])
 
   const markAllRead = async () => {
     if (unreadCount === 0) return
@@ -110,13 +150,21 @@ export function UserNotificationsBell({ userId }: { userId: number }) {
   return (
     <div ref={containerRef} className="relative shrink-0">
       <button
+        ref={buttonRef}
         type="button"
         onClick={handleToggle}
-        className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors hover:opacity-90"
+        className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all duration-300 hover:scale-110 active:scale-95"
         style={{
-          color: theme.colors.textPrimary,
+          color: theme.colors.textSecondary,
           background: 'transparent',
-          border: 'none',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = currentTheme === 'dark' 
+            ? 'rgba(255, 255, 255, 0.1)' 
+            : 'rgba(0, 0, 0, 0.05)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent'
         }}
         aria-label="Notifications"
       >
@@ -134,66 +182,104 @@ export function UserNotificationsBell({ userId }: { userId: number }) {
           />
         </svg>
         {unreadCount > 0 && (
-          <span
-            className="absolute -top-0.5 -right-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white min-w-[18px] text-center"
-            style={{ background: theme.colors.glacier500 }}
+          <span 
+            className="absolute -top-1 -right-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white min-w-[18px] text-center animate-pulse"
+            style={{
+              background: theme.colors.success,
+              boxShadow: `0 0 10px ${theme.colors.success}40`,
+            }}
           >
             {unreadLabel}
           </span>
         )}
       </button>
 
-      {open && (
+      {mounted && open && createPortal(
         <div
-          className="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl shadow-xl z-[100]"
+          ref={dropdownRef}
+          className="fixed w-80 overflow-hidden rounded-xl z-[9999] animate-in fade-in slide-in-from-top-2 duration-300"
           style={{
+            top: `${dropdownPosition.top}px`,
+            right: `${dropdownPosition.right}px`,
             background: theme.glass.background,
+            backdropFilter: theme.glass.blur,
             border: theme.glass.border,
             boxShadow: theme.glass.shadow,
-            borderRadius: theme.radius.md,
           }}
         >
-          <div
-            className="flex items-center justify-between border-b px-4 py-3"
-            style={{ borderColor: 'var(--glass-border)' }}
+          <div 
+            className="flex items-center justify-between px-4 py-3"
+            style={{
+              borderBottom: theme.glass.border,
+            }}
           >
-            <span className="text-sm font-semibold" style={{ color: theme.colors.textPrimary }}>
+            <span 
+              className="text-sm font-semibold"
+              style={{ color: theme.colors.textPrimary }}
+            >
               Notifications
             </span>
             {loading && (
-              <span className="text-xs" style={{ color: theme.colors.textMuted }}>
-                Loading...
-              </span>
+              <span style={{ color: theme.colors.textMuted }} className="text-xs">Loading...</span>
             )}
           </div>
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 && !loading && (
-              <div className="px-4 py-8 text-center text-sm" style={{ color: theme.colors.textMuted }}>
+              <div 
+                className="px-4 py-8 text-center text-sm"
+                style={{ color: theme.colors.textMuted }}
+              >
                 No notifications yet.
               </div>
             )}
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className="border-b px-4 py-3 text-sm last:border-b-0 transition-colors cursor-pointer"
+                className="px-4 py-3 text-sm last:border-b-0 transition-all duration-200 cursor-pointer hover:scale-[1.01]"
                 style={{
-                  borderColor: 'var(--glass-border)',
-                  background: notification.readAt ? 'transparent' : 'var(--color-frost-50)',
+                  borderBottom: theme.glass.border,
+                  background: !notification.readAt
+                    ? currentTheme === 'dark'
+                      ? 'rgba(16, 185, 129, 0.15)'
+                      : 'rgba(16, 185, 129, 0.08)'
+                    : 'transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (notification.readAt) {
+                    e.currentTarget.style.background = currentTheme === 'dark'
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.02)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (notification.readAt) {
+                    e.currentTarget.style.background = 'transparent'
+                  }
                 }}
               >
-                <p className="font-medium" style={{ color: theme.colors.textPrimary }}>
+                <p 
+                  className="font-medium"
+                  style={{ color: theme.colors.textPrimary }}
+                >
                   {notification.title}
                 </p>
-                <p className="mt-1 text-xs" style={{ color: theme.colors.textSecondary }}>
+                <p 
+                  className="mt-1 text-xs"
+                  style={{ color: theme.colors.textSecondary }}
+                >
                   {notification.message}
                 </p>
-                <p className="mt-2 text-[11px]" style={{ color: theme.colors.textMuted }}>
+                <p 
+                  className="mt-2 text-[11px]"
+                  style={{ color: theme.colors.textMuted }}
+                >
                   {new Date(notification.createdAt).toLocaleString()}
                 </p>
               </div>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

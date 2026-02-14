@@ -169,11 +169,12 @@ export default function AnalyticsPage() {
       {/* Key Metrics KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div
-          className="rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02]"
+          className="rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] glass-animated"
           style={{
             background: theme.glass.background,
             border: theme.glass.border,
             boxShadow: theme.glass.shadow,
+            backdropFilter: theme.glass.blur,
           }}
         >
           <div className="text-3xl mb-2">🏠</div>
@@ -187,11 +188,12 @@ export default function AnalyticsPage() {
         </div>
 
         <div
-          className="rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02]"
+          className="rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] glass-animated"
           style={{
             background: theme.glass.background,
             border: theme.glass.border,
             boxShadow: theme.glass.shadow,
+            backdropFilter: theme.glass.blur,
           }}
         >
           <div className="text-3xl mb-2">👥</div>
@@ -205,11 +207,12 @@ export default function AnalyticsPage() {
         </div>
 
         <div
-          className="rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02]"
+          className="rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] glass-animated"
           style={{
             background: theme.glass.background,
             border: theme.glass.border,
             boxShadow: theme.glass.shadow,
+            backdropFilter: theme.glass.blur,
           }}
         >
           <div className="text-3xl mb-2">✨</div>
@@ -221,11 +224,12 @@ export default function AnalyticsPage() {
         </div>
 
         <div
-          className="rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02]"
+          className="rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] glass-animated"
           style={{
             background: theme.glass.background,
             border: theme.glass.border,
             boxShadow: theme.glass.shadow,
+            backdropFilter: theme.glass.blur,
           }}
         >
           <div className="text-3xl mb-2">📈</div>
@@ -241,11 +245,12 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Activity Trend Line Chart */}
         <div
-          className="rounded-2xl p-6"
+          className="rounded-2xl p-6 glass-animated transition-all duration-300 hover:scale-[1.01]"
           style={{
             background: theme.glass.background,
             border: theme.glass.border,
             boxShadow: theme.glass.shadow,
+            backdropFilter: theme.glass.blur,
           }}
         >
           <h2
@@ -314,11 +319,12 @@ export default function AnalyticsPage() {
 
         {/* Activity Breakdown Pie Chart */}
         <div
-          className="rounded-2xl p-6"
+          className="rounded-2xl p-6 glass-animated transition-all duration-300 hover:scale-[1.01]"
           style={{
             background: theme.glass.background,
             border: theme.glass.border,
             boxShadow: theme.glass.shadow,
+            backdropFilter: theme.glass.blur,
           }}
         >
           <h2
@@ -429,11 +435,12 @@ export default function AnalyticsPage() {
       {/* Activity Stats List & Recent Logs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div
-          className="rounded-2xl p-6"
+          className="rounded-2xl p-6 glass-animated transition-all duration-300 hover:scale-[1.01]"
           style={{
             background: theme.glass.background,
             border: theme.glass.border,
             boxShadow: theme.glass.shadow,
+            backdropFilter: theme.glass.blur,
           }}
         >
           <h2
@@ -482,11 +489,12 @@ export default function AnalyticsPage() {
 
         {/* Recent Activity Timeline */}
         <div
-          className="rounded-2xl p-6"
+          className="rounded-2xl p-6 glass-animated transition-all duration-300 hover:scale-[1.01]"
           style={{
             background: theme.glass.background,
             border: theme.glass.border,
             boxShadow: theme.glass.shadow,
+            backdropFilter: theme.glass.blur,
           }}
         >
           <h2

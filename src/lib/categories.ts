@@ -142,3 +142,4 @@ export function getSubcategories(category: Category | string): string[] {
   return subcategories[category as Category] || []
 }
 
+
