@@ -12,17 +12,11 @@ jobs:
     steps:
       - name: SSH Deploy to EC2
         run: |
-          # Write SSH key
-          echo "${{ secrets.PRIVATE_KEY}}" > ~/ssh_key
+          echo "${{ secrets.PRIVATE_KEY }}" > ~/ssh_key
           chmod 600 ~/ssh_key
 
-          # Connect and run remote commands
-          ssh -i ~/ssh_key -o StrictHostKeyChecking=no root@147.182.206.208"
-            # Navigate to project
-            cd ~/taakra/http &&
-
-            # Force sync with latest GitHub repo
-
-
+          ssh -i ~/ssh_key -o StrictHostKeyChecking=no root@147.182.206.208 << 'EOF'
+            cd ~/taakra/http
+            git pull origin main
             echo "Deployed successfully!!!"
-          "
+          EOF
